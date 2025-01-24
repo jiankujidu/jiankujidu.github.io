@@ -10,7 +10,7 @@
   
 
   
-  <script>window.icon_font = '4552607_tq6stt6tcg';window.clipboard_tips = {"success":"复制成功(*^▽^*)","fail":"复制失败 (ﾟ⊿ﾟ)ﾂ","copyright":{"enable":false,"count":50,"content":"本文版权：本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！"}};</script>
+  <script>window.icon_font = '4552607_tq6stt6tcg';window.clipboard_tips = {"success":"复制成功(*^▽^*)","fail":"复制失败 (ﾟ⊿ﾟ)ﾂ","copyright":{"enable":false,"count":50,"content":"本文版权：本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！"}};window.outdate = {"enable":true,"daysAgo":180,"message":"本文最后更新于 {time}，请注意文中内容可能已经发生变化。"};</script>
   
   
   <title>
@@ -202,6 +202,8 @@
 
     <div class="e-content article-entry" itemprop="articleBody">
       
+        <blockquote id="outdate-blockquote" style="display: none;"><p></p></blockquote>
+      
       
         <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>本教程是使用 Koishi 接入 QQ 和 QQ 频道的指南，摘自于koishi官方论坛，有问题也可以去官方论坛下面评论<br><a target="_blank" rel="noopener" href="https://forum.koishi.xyz/t/topic/810">koishi官方教程</a><br>作者使用Windows 10</p>
 <h1 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h1><ul>
@@ -350,7 +352,7 @@
       
         
         
-          <img data-src="https://d-sketon.top/img/backimg/bg9.jpg" data-sizes="auto" alt="第一篇博客（C/C++）" class="lazyload">
+          <img data-src="https://d-sketon.top/img/backimg/bg3.jpg" data-sizes="auto" alt="第一篇博客（C/C++）" class="lazyload">
         
       
       <a href="/2024/07/30/%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%EF%BC%88Cpp%EF%BC%89/"></a>
@@ -397,7 +399,7 @@
 <div class="sidebar-state">
   <div class="sidebar-state-article">
     <div>文章</div>
-    <div class="sidebar-state-number">7</div>
+    <div class="sidebar-state-number">8</div>
   </div>
   <div class="sidebar-state-category">
     <div>分类</div>
@@ -405,7 +407,7 @@
   </div>
   <div class="sidebar-state-tag">
     <div>标签</div>
-    <div class="sidebar-state-number">5</div>
+    <div class="sidebar-state-number">6</div>
   </div>
 </div>
 <div class="sidebar-social">
@@ -418,12 +420,8 @@
       <a href=https://github.com/dzt2008 itemprop="url" target="_blank" aria-label="github"></a>
     </div>
   
-    <div class="icon-qq sidebar-social-icon">
-      <a href=tencent://message/?uin=984798812&amp;Site=&amp;Menu=yes itemprop="url" target="_blank" aria-label="qq"></a>
-    </div>
-  
     <div class="icon-telegram sidebar-social-icon">
-      <a href=https://t.me/fwt itemprop="url" target="_blank" aria-label="telegram"></a>
+      <a href=https://t.me/dzt2008 itemprop="url" target="_blank" aria-label="telegram"></a>
     </div>
   
 </div>
@@ -478,7 +476,7 @@
       
       <div>
         <span class="icon-copyright"></span>
-        2020-2024
+        2020-2025
         <span class="footer-info-sep"></span>
         冬涛殇雪
       </div>
@@ -491,10 +489,10 @@
       
         <div>
           <span class="icon-brush"></span>
-          7.5k
+          10k
           &nbsp;|&nbsp;
           <span class="icon-coffee"></span>
-          00:25
+          00:34
         </div>
       
       
@@ -536,7 +534,7 @@
 <div class="sidebar-state">
   <div class="sidebar-state-article">
     <div>文章</div>
-    <div class="sidebar-state-number">7</div>
+    <div class="sidebar-state-number">8</div>
   </div>
   <div class="sidebar-state-category">
     <div>分类</div>
@@ -544,7 +542,7 @@
   </div>
   <div class="sidebar-state-tag">
     <div>标签</div>
-    <div class="sidebar-state-number">5</div>
+    <div class="sidebar-state-number">6</div>
   </div>
 </div>
 <div class="sidebar-social">
@@ -557,12 +555,8 @@
       <a href=https://github.com/dzt2008 itemprop="url" target="_blank" aria-label="github"></a>
     </div>
   
-    <div class="icon-qq sidebar-social-icon">
-      <a href=tencent://message/?uin=984798812&amp;Site=&amp;Menu=yes itemprop="url" target="_blank" aria-label="qq"></a>
-    </div>
-  
     <div class="icon-telegram sidebar-social-icon">
-      <a href=https://t.me/fwt itemprop="url" target="_blank" aria-label="telegram"></a>
+      <a href=https://t.me/dzt2008 itemprop="url" target="_blank" aria-label="telegram"></a>
     </div>
   
 </div>
@@ -815,6 +809,25 @@
   </script>
   
 
+<script data-pjax>
+  var updateTime = _$('#post-update-time')?.innerHTML;
+
+  if (updateTime) {
+    const update = new Date(updateTime);
+    const now = new Date();
+    const diff = now - update;
+    const days = diff / 86400000;
+    const { daysAgo, message: template } = window.outdate;
+    if (days >= daysAgo) {
+      const message = template.replace(/{time}/, updateTime);
+      const blockquote = _$('#outdate-blockquote');
+      if (blockquote) {
+        blockquote.querySelector('p').innerText = message;
+        blockquote.style.display = 'block';
+      }
+    }
+  }
+</script>
 
 
   
