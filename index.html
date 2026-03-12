@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>病理检测自动报价系统（电脑端）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background: #f5f7fa;
+            padding: 20px;
+        }
+        /* 顶部标题栏 */
+        .header-bar {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header-bar h1 {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+        .header-bar p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        /* 自定义价格表工具条 */
+        .price-toolbar {
+            background: #e8f4fc;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #d1ecf1;
+        }
+        .price-toolbar label {
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+        .btn {
+            padding: 9px 18px;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        .btn-green {
+            background: #28a745;
+        }
+        .btn-red {
+            background: #dc3545;
+        }
+        .btn-blue {
+            background: #3498db;
+        }
+        .btn-gray {
+            background: #adb5bd;
+        }
+        .price-tip {
+            font-size: 0.85rem;
+            color: #666;
+            flex: 1;
+            line-height: 1.4;
+        }
+        /* 主内容区（左右分栏） */
+        .main-container {
+            display: flex;
+            gap: 30px;
+            padding: 25px;
+            background: white;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .left-panel {
+            flex: 2;
+            min-width: 700px;
+            max-height: 850px;
+            overflow-y: auto;
+            padding-right: 15px;
+        }
+        .right-panel {
+            flex: 1;
+            min-width: 400px;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            margin: 0 0 20px;
+        }
+        /* 搜索区域（电脑端增强） */
+        .search-container {
+            position: relative;
+            margin: 0 0 20px;
+            width: 100%;
+        }
+        .search-box {
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 14px 15px 14px 45px;
+            border: 1px solid #3498db;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            outline: none;
+        }
+        .search-box input:focus {
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+            color: #666;
+        }
+        /* 搜索清除按钮 */
+        .clear-search {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            color: #999;
+            cursor: pointer;
+            display: none;
+            transition: color 0.2s;
+        }
+        .clear-search.active {
+            display: block;
+        }
+        .clear-search:hover {
+            color: #dc3545;
+        }
+        /* 搜索类型筛选 */
+        .search-filter {
+            display: flex;
+            gap: 12px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        .filter-tag {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            background: #f8f9fa;
+            color: #666;
+            transition: all 0.2s;
+        }
+        .filter-tag:hover {
+            background: #e9ecef;
+        }
+        .filter-tag.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        /* 搜索结果统计 */
+        .search-stats {
+            font-size: 0.9rem;
+            color: #666;
+            margin: 8px 0 15px;
+            padding-left: 5px;
+        }
+        /* 已选项目提示条 */
+        .selected-tip {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 12px 15px;
+            margin: 0 0 15px;
+            font-size: 0.95rem;
+            color: #1976d2;
+            border-radius: 4px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+        .selected-tip.active {
+            display: flex;
+        }
+        .selected-count {
+            font-weight: bold;
+            color: #d32f2f;
+            font-size: 1.05rem;
+        }
+        /* 切片规则警告条 */
+        .slice-alert {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 12px 15px;
+            margin: 0 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .slice-alert .icon {
+            color: #ffc107;
+            font-size: 1.2rem;
+        }
+        .slice-alert .text {
+            color: #856404;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+        .slice-alert .text strong {
+            font-size: 1rem;
+        }
+        /* 项目分类区域 */
+        .category-block {
+            margin-bottom: 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 18px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .category-title {
+            font-size: 1.2rem;
+            color: #34495e;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .category-title::before {
+            content: "●";
+            color: #3498db;
+            font-size: 0.9rem;
+        }
+        /* 服务表格 */
+        .service-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .service-table th,
+        .service-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 0.95rem;
+        }
+        .service-table th {
+            background: #e9ecef;
+            font-weight: 600;
+            color: #495057;
+        }
+        .service-table tr:last-child td {
+            border-bottom: none;
+        }
+        .service-table tr:hover {
+            background: #f1f8ff;
+        }
+        .price-red {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        .unit-green {
+            color: #28a745;
+        }
+        .slice-tag {
+            display: inline-block;
+            background: #dc3545;
+            color: white;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 6px;
+        }
+        .not-alone-tag {
+            display: inline-block;
+            background: #ffc107;
+            color: white;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 6px;
+        }
+        .qty-input {
+            width: 80px;
+            padding: 7px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            outline: none;
+            font-size: 0.95rem;
+        }
+        .qty-input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        .qty-input.slice-input {
+            border-color: #dc3545;
+        }
+        .qty-input.has-value {
+            border-color: #28a745;
+            box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.1);
+        }
+        .desc {
+            font-size: 0.85rem;
+            color: #666;
+            line-height: 1.3;
+            margin-top: 3px;
+        }
+        .note {
+            font-size: 0.8rem;
+            color: #dc3545;
+            margin-top: 3px;
+            font-style: italic;
+        }
+        /* 操作按钮区（电脑端横向排列） */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin: 25px 0;
+            justify-content: center;
+        }
+        .action-buttons .btn {
+            padding: 12px 30px;
+            font-size: 1.05rem;
+        }
+        /* 报价结果区 */
+        .result-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 0 0 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #ddd;
+            font-size: 0.95rem;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .result-name {
+            color: #2c3e50;
+            word-break: break-all;
+            max-width: 250px;
+        }
+        .result-amount {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 18px 0;
+            margin-top: 10px;
+            border-top: 2px solid #3498db;
+        }
+        .total-label {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .total-amount {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #dc3545;
+        }
+        .quote-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            white-space: pre-line;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        /* 无结果提示 */
+        .no-result {
+            text-align: center;
+            padding: 60px 0;
+            color: #666;
+            display: none;
+            font-size: 1.1rem;
+        }
+        /* 隐藏文件输入框 */
+        #fileInput {
+            display: none;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="header-bar">
+        <h1>病理检测自动报价系统（电脑端）</h1>
+        <p>多维度精准搜索 | 多次选择不丢失 | 2片起切自动计算</p>
+    </div>
+
+    <div class="price-toolbar">
+        <label>自定义价格表:</label>
+        <button class="btn btn-green" id="uploadBtn">选择Excel定价表</button>
+        <input type="file" id="fileInput" accept=".xlsx,.xls">
+        <button class="btn btn-green" id="templateBtn">下载标准模板</button>
+        <button class="btn btn-red" id="resetPriceBtn">恢复默认价格</button>
+        <span class="price-tip">
+            支持.xlsx/.xls格式，Excel需包含【服务分类、服务名称、价格（元）、单位、内容/应用、备注】列 | 
+            搜索支持多维度筛选，已填数量不会丢失，结果实时展示
+        </span>
+    </div>
+
+    <div class="main-container">
+        <!-- 左侧检测项目选择区 -->
+        <div class="left-panel">
+            <h2 class="section-title">检测项目选择（完全匹配Excel模板）</h2>
+
+            <!-- 增强版搜索区域 -->
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="模糊搜索：服务名称/分类/价格/单位/描述/备注（例：HE染色、石蜡切片、50元）">
+                    <div class="clear-search" id="clearSearch">✕</div>
+                </div>
+                
+                <!-- 搜索类型筛选 -->
+                <div class="search-filter">
+                    <div class="filter-tag active" data-type="all">全部</div>
+                    <div class="filter-tag" data-type="name">服务名称</div>
+                    <div class="filter-tag" data-type="category">分类</div>
+                    <div class="filter-tag" data-type="price">价格</div>
+                    <div class="filter-tag" data-type="desc">描述/备注</div>
+                </div>
+                
+                <!-- 搜索结果统计 -->
+                <div class="search-stats" id="searchStats">共 63 个检测项目</div>
+            </div>
+
+            <!-- 已选项目提示 -->
+            <div class="selected-tip" id="selectedTip">
+                <span>已选择 <span id="selectedCount" class="selected-count">0</span> 个项目</span>
+                <span>→ 切换搜索关键词不会清空已填数量，支持跨搜索累计选择</span>
+            </div>
+
+            <div class="slice-alert">
+                <span class="icon">⚠️</span>
+                <span class="text">
+                    <strong>切片类项目规则：</strong>服务名称含「[2片起切]」的项目均执行2片起切，输入数量＜2时，自动按2片计算费用；其他项目无起切限制。
+                </span>
+            </div>
+
+            <div id="serviceContainer"></div>
+            <div class="no-result" id="noResult">暂无匹配的检测项目</div>
+
+            <div class="action-buttons">
+                <button class="btn btn-blue" id="calcBtn">计算报价</button>
+                <button class="btn btn-gray" id="resetBtn">重置所有选择</button>
+                <button class="btn btn-green" id="exportBtn">导出报价单</button>
+            </div>
+        </div>
+
+        <!-- 右侧报价结果区 -->
+        <div class="right-panel">
+            <h2 class="section-title">报价结果</h2>
+            <div class="result-card">
+                <div id="resultList" style="max-height: 350px; overflow-y: auto;">
+                    <div class="result-item">
+                        <span class="result-name">请选择检测项目并点击计算</span>
+                        <span class="result-amount">-</span>
+                    </div>
+                </div>
+                <div class="total-row">
+                    <span class="total-label">总计金额:</span>
+                    <span class="total-amount" id="totalAmount">¥0.00</span>
+                </div>
+            </div>
+
+            <div class="quote-details" id="quoteDetails">
+病理检测报价单
+===================
+
+选择的检测项目:
+- 暂无选择
+
+费用计算规则:
+- 切片类项目: 2片起切，输入数量<2时按2片计算
+- 其他项目: 无起切限制，按实际输入计算
+
+费用计算:
+- 总计: ¥0.00
+
+备注:
+1. 搜索支持多维度筛选（名称/分类/价格/描述），结果实时展示
+2. 搜索仅筛选项目展示，已填数量不会丢失，支持跨搜索累计选择
+3. 标注"不单接"的项目需结合其他项目选择
+4. 实际费用以最终确认的检测项目为准
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 核心配置
+        const MIN_SLICE = 2;
+        const SLICE_FLAG = "[2片起切]";
+        const NOT_ALONE = "不单接";
+        let originalData = [];
+        let selectedQuantities = {}; // 存储所有项目的已选数量（key: 项目名称, value: 数量）
+        let currentSearchType = "all"; // 当前搜索类型：all/name/category/price/desc
+        let lastSearchKeyword = ""; // 记录最后一次搜索关键词
+
+        // 完整Excel项目数据（63项完整数据）
+        const DEFAULT_DATA = [
+            {category: "组织样本基础处理",name: "石蜡包埋",price: 15,unit: "样",desc: "提供10%Formalin/4%PFA固定组织，需明确切面要求",note: "",isSlice: false,notAlone: false},
+            {category: "组织样本基础处理",name: "细胞爬片",price: 110,unit: "片",desc: "",note: "",isSlice: false,notAlone: true},
+            {category: "组织样本基础处理",name: "石蜡切片",price: 5,unit: "张",desc: "提供蜡块，单纯切片每个蜡块2张起切，默认做防脱切片",note: "",isSlice: true,notAlone: false},
+            {category: "组织样本基础处理",name: "组织脱钙",price: 50,unit: "样",desc: "骨组织，小鼠2-3周，大鼠4-6周",note: "",isSlice: false,notAlone: false},
+            {category: "组织样本基础处理",name: "OCT包埋",price: 10,unit: "样",desc: "需明确切面要求，区分固定组织或者新鲜组织",note: "骨头样本，在包埋前需要脱钙",isSlice: false,notAlone: false},
+            {category: "组织样本基础处理",name: "冰冻切片",price: 10,unit: "张",desc: "",note: "",isSlice: true,notAlone: false},
+            {category: "组织样本基础处理(特殊组织)",name: "石蜡包埋(特殊组织)",price: 30,unit: "样",desc: "脑、眼球、细胞团、类器官、材料、植物等特殊组织",note: "",isSlice: false,notAlone: false},
+            {category: "组织样本基础处理(特殊组织)",name: "石蜡切片(特殊组织)",price: 10,unit: "张",desc: "提供蜡块，如骨关节、脑、材料等特殊样本，单纯切片2张起切",note: "",isSlice: true,notAlone: false},
+            {category: "组织样本基础处理(特殊组织)",name: "组织脱钙",price: 50,unit: "样",desc: "骨组织，小鼠2-3周，大鼠4-6周",note: "",isSlice: false,notAlone: false},
+            {category: "组织样本基础处理(特殊组织)",name: "冰冻切片(特殊组织)",price: 20,unit: "样",desc: "特殊厚度，特殊位置要求",note: "",isSlice: true,notAlone: false},
+            {category: "组织芯片阵列制作",name: "组织取芯位置标记",price: 20,unit: "点",desc: "病理医生通过HE片(切片+HE染色正常计费)，根据要求分析并标记取芯位置",note: "",isSlice: false,notAlone: false},
+            {category: "组织芯片阵列制作",name: "组织取芯阵列制作",price: 40,unit: "点",desc: "取芯具体直径商定",note: "",isSlice: false,notAlone: false},
+            {category: "组织芯片阵列制作",name: "阵列蜡块切片",price: 20,unit: "张",desc: "要求30张起切，建议一次性将芯片蜡块连续切完",note: "",isSlice: false,notAlone: false},
+            {category: "组织芯片阵列制作",name: "冰冻切片",price: 10,unit: "张",desc: "",note: "",isSlice: false,notAlone: false},
+            {category: "组织切片染色（常规/特殊染色）",name: "HE染色(组织形态)",price: 10,unit: "张",desc: "提供蜡块/切片",note: "染色报价不含切片、拍照或扫描，部分特殊染色6张起染，更多特殊染色详询销售工程师。",isSlice: false,notAlone: false},
+            {category: "组织切片染色（常规/特殊染色）",name: "马森(Masson)染色(胶原纤维)",price: 30,unit: "张",desc: "提供蜡块/切片",note: "",isSlice: false,notAlone: false},
+            {category: "组织切片染色（常规/特殊染色）",name: "天狼星红染色(胶原纤维)",price: 30,unit: "张",desc: "提供蜡块/切片",note: "",isSlice: false,notAlone: false},
+            {category: "组织切片染色（常规/特殊染色）",name: "PAS糖原染色(粘液和霉菌)",price: 30,unit: "张",desc: "提供蜡块/切片",note: "",isSlice: false,notAlone: false},
+            {category: "组织切片染色（常规/特殊染色）",name: "AB-PAS爱先蓝-糖原染色(粘液)",price: 40,unit: "张",desc: "提供蜡块/切片",note: "",isSlice: false,notAlone: false},
+            {category: "组织切片染色（常规/特殊染色）",name: "油红O染色",price: 30,unit: "张",desc: "提供蜡块/切片",note: "",isSlice: false,notAlone: false},
+            {category: "组织切片染色（常规/特殊染色）",name: "尼氏染色",price: 30,unit: "张",desc: "提供蜡块/切片",note: "",isSlice: false,notAlone: false},
+            {category: "组织切片染色（常规/特殊染色）",name: "甲苯胺蓝",price: 30,unit: "张",desc: "提供蜡块/切片",note: "",isSlice: false,notAlone: false},
+            {category: "组织切片染色（常规/特殊染色）",name: "茜素红染色",price: 140,unit: "张",desc: "提供蜡块/切片",note: "",isSlice: false,notAlone: true},
+            {category: "组织切片染色（常规/特殊染色）",name: "ALP染色",price: 140,unit: "张",desc: "提供蜡块/切片",note: "",isSlice: false,notAlone: true},
+            {category: "组织切片染色（常规/特殊染色）",name: "番红固绿染色(植物或骨组织)",price: 30,unit: "张",desc: "提供蜡块/切片",note: "",isSlice: false,notAlone: false},
+            {category: "组织切片染色（常规/特殊染色）",name: "阿利新蓝染色（AB染色）",price: 25,unit: "张",desc: "提供蜡块/切片",note: "",isSlice: false,notAlone: false},
+            {category: "组织切片染色（常规/特殊染色）",name: "LFB染色",price: 40,unit: "张",desc: "提供蜡块/切片",note: "",isSlice: false,notAlone: false},
+            {category: "组织切片染色（常规/特殊染色）",name: "ROS染色",price: 55,unit: "张",desc: "提供蜡块/切片",note: "",isSlice: false,notAlone: false},
+            {category: "组织切片染色（常规/特殊染色）",name: "DAB加强法普鲁士蓝染色",price: 30,unit: "张",desc: "提供蜡块/切片",note: "",isSlice: false,notAlone: false},
+            {category: "组织切片染色（常规/特殊染色）",name: "DHE染色",price: 55,unit: "张",desc: "提供蜡块/切片",note: "",isSlice: false,notAlone: false},
+            {category: "组织切片染色（常规/特殊染色）",name: "GUS染色",price: 60,unit: "张",desc: "提供蜡块/切片",note: "",isSlice: false,notAlone: false},
+            {category: "多重免疫荧光",name: "抗体使用费",price: 30,unit: "样/指标",desc: "",note: "以上免疫染色需单独做预实验，四标以上荧光现询。这个里面是不含一抗的。每个指标抗体使用费用是30元 单标30*1 双标30*2 三标30*3",isSlice: false,notAlone: false},
+            {category: "多重免疫荧光",name: "免疫组化",price: 35,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "多重免疫荧光",name: "免疫组化+全景扫描",price: 85,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "多重免疫荧光",name: "免疫荧光(单标)",price: 80,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "多重免疫荧光",name: "免疫荧光(单标)+全景扫描",price: 160,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "多重免疫荧光",name: "免疫荧光(双标)",price: 100,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "多重免疫荧光",name: "免疫荧光(双标)+全景扫描",price: 200,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "多重免疫荧光",name: "免疫荧光(三标)",price: 200,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "多重免疫荧光",name: "免疫荧光(三标)+全景扫描",price: 400,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "多重免疫荧光",name: "免疫荧光(四标)",price: 400,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "多重免疫荧光",name: "免疫荧光(四标)+全景扫描",price: 800,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "多重免疫荧光",name: "免疫荧光(五标)",price: 800,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "多重免疫荧光",name: "免疫荧光(五标)+全景扫描",price: 1600,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "多重免疫荧光",name: "Tunel凋亡染色(DAB/荧光)",price: 220,unit: "张",desc: "提供切片/爬片",note: "",isSlice: false,notAlone: false},
+            {category: "多重免疫荧光",name: "Tunel凋亡染色(DAB/荧光)+全景扫描",price: 300,unit: "张",desc: "提供切片/爬片",note: "",isSlice: false,notAlone: false},
+            {category: "组织（芯片）多重荧光（含扫描）芯片客户自己提供",name: "免疫组化+全景扫描",price: 400,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "组织（芯片）多重荧光（含扫描）芯片客户自己提供",name: "免疫荧光（单标）+全景扫描",price: 800,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "组织（芯片）多重荧光（含扫描）芯片客户自己提供",name: "免疫荧光（双标）+全景扫描",price: 1600,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "组织（芯片）多重荧光（含扫描）芯片客户自己提供",name: "免疫荧光（三标）+全景扫描",price: 2400,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "组织（芯片）多重荧光（含扫描）芯片客户自己提供",name: "免疫荧光（四标）+全景扫描",price: 5000,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "组织（芯片）多重荧光（含扫描）芯片客户自己提供",name: "免疫荧光（五标）+全景扫描",price: 7000,unit: "张",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: false},
+            {category: "分子病理/超微病理检测",name: "原位杂交ISH/FISH（单标）",price: 240,unit: "张",desc: "可检测DNA/mRNA /LnCRNA/miRNA，客户提供探针、试剂盒",note: "注:原位杂交建议客户选用地高辛标记探针，该探针转化为荧光标记，可用于荧光多标实验。",isSlice: false,notAlone: false},
+            {category: "分子病理/超微病理检测",name: "原位杂交探针定制",price: 1500,unit: "项",desc: "多种标记可以选，具体咨询",note: "1500起，具体询价",isSlice: false,notAlone: false},
+            {category: "切片扫描/拍照",name: "白光扫描(常规切片)",price: 50,unit: "张",desc: "具体根据组织大小商定",note: "",isSlice: false,notAlone: false},
+            {category: "切片扫描/拍照",name: "白光拍照",price: 80,unit: "样/时间点",desc: "提供切片/细胞爬片,一抗",note: "",isSlice: false,notAlone: true},
+            {category: "切片扫描/拍照",name: "白光扫描(组织芯片)",price: 250,unit: "张",desc: "具体根据组织大小商定",note: "200-300元/张",isSlice: false,notAlone: false},
+            {category: "切片扫描/拍照",name: "荧光扫描(单标/双标/三标/四标/五标)",price: 80,unit: "张",desc: "具体根据组织大小商定",note: "80/120/240/460/880元/张",isSlice: false,notAlone: false},
+            {category: "切片扫描/拍照",name: "荧光扫描(组织芯片荧光单标/双标/三标/四标/五标)",price: 2000,unit: "张",desc: "具体根据组织点阵数量商定",note: "1000-3000元/张",isSlice: false,notAlone: false},
+            {category: "切片扫描/拍照",name: "did远红外光扫描",price: 80,unit: "张",desc: "具体根据样本以及需求来定",note: "",isSlice: false,notAlone: false},
+            {category: "切片扫描/拍照",name: "共聚焦(单标/双标/三标）",price: 150,unit: "张",desc: "具体根据样本以及需求来定",note: "150/300/450元/张",isSlice: false,notAlone: false},
+            {category: "临床病理读片分析/科研",name: "染色分析",price: 200,unit: "样",desc: "具体根据样本以及需求来定",note: "",isSlice: false,notAlone: true},
+            {category: "临床病理读片分析/科研",name: "常规病理描述分析",price: 40,unit: "张/视野",desc: "提供代表性图片及病理常规分级;多视野分析及特殊要求详询",note: "",isSlice: false,notAlone: false},
+            {category: "临床病理读片分析/科研",name: "阳性细胞数量和平均光密度值分析",price: 30,unit: "张/视野",desc: "提供代表性图片及病理常规分级;多视野分析及特殊要求详询",note: "",isSlice: false,notAlone: false},
+            {category: "临床病理读片分析/科研",name: "阳性率分析（荧光分析）",price: 25,unit: "张/视野",desc: "提供代表性图片及病理常规分级;多视野分析及特殊要求详询",note: "",isSlice: false,notAlone: false},
+            {category: "临床病理读片分析/科研",name: "常规病理描述+病理评分",price: 60,unit: "张/视野",desc: "提供代表性图片重点病变描述及病理评分(需要提供评分标准)",note: "",isSlice: false,notAlone: false},
+            {category: "临床病理读片分析/科研",name: "病理评分",price: 40,unit: "张/视野",desc: "涉及HE+特染等共评，60-80元/例(需要提供评分标准)",note: "",isSlice: false,notAlone: false},
+            {category: "临床病理读片分析/科研",name: "病理医师+AI辅助(简易标注)",price: 85,unit: "全切片",desc: "适用于免疫组化、荧光、特殊染色，如IHC表达分析、纤维化面积、脂肪细胞大小、血管密度、肿瘤面积、转移灶数量/面积、坏死/栓塞及目的组织分类等",note: "50-120元/全切片",isSlice: false,notAlone: false}
+        ];
+
+        // DOM元素获取
+        const fileInput = document.getElementById("fileInput");
+        const uploadBtn = document.getElementById("uploadBtn");
+        const templateBtn = document.getElementById("templateBtn");
+        const resetPriceBtn = document.getElementById("resetPriceBtn");
+        const searchInput = document.getElementById("searchInput");
+        const clearSearch = document.getElementById("clearSearch");
+        const searchStats = document.getElementById("searchStats");
+        const serviceContainer = document.getElementById("serviceContainer");
+        const noResult = document.getElementById("noResult");
+        const calcBtn = document.getElementById("calcBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const resultList = document.getElementById("resultList");
+        const totalAmount = document.getElementById("totalAmount");
+        const quoteDetails = document.getElementById("quoteDetails");
+        const exportBtn = document.getElementById("exportBtn");
+        const selectedTip = document.getElementById("selectedTip");
+        const selectedCount = document.getElementById("selectedCount");
+        const filterTags = document.querySelectorAll(".filter-tag");
+
+        // 页面初始化
+        window.onload = () => {
+            originalData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+            initSelectedQuantities(); // 初始化已选数量存储
+            renderServices(originalData);
+            updateSelectedTip(); // 更新已选项目提示
+            updateSearchStats(originalData.length); // 更新搜索统计
+            
+            // 绑定事件
+            uploadBtn.addEventListener("click", () => fileInput.click());
+            fileInput.addEventListener("change", parseExcel);
+            templateBtn.addEventListener("click", downloadTemplate);
+            resetPriceBtn.addEventListener("click", resetDefault);
+            searchInput.addEventListener("input", debounce(handleSearch, 300)); // 防抖搜索
+            clearSearch.addEventListener("click", clearSearchInput);
+            calcBtn.addEventListener("click", calculateQuote);
+            resetBtn.addEventListener("click", resetAllSelect);
+            exportBtn.addEventListener("click", exportQuote);
+            
+            // 绑定搜索类型筛选
+            filterTags.forEach(tag => {
+                tag.addEventListener("click", function() {
+                    filterTags.forEach(t => t.classList.remove("active"));
+                    this.classList.add("active");
+                    currentSearchType = this.dataset.type;
+                    // 重新执行搜索
+                    handleSearch();
+                });
+            });
+        };
+
+        // 防抖函数（优化搜索性能）
+        function debounce(func, delay) {
+            let timer = null;
+            return function() {
+                const context = this;
+                const args = arguments;
+                clearTimeout(timer);
+                timer = setTimeout(() => {
+                    func.apply(context, args);
+                }, delay);
+            };
+        }
+
+        // 初始化已选数量存储（所有项目默认0）
+        function initSelectedQuantities() {
+            originalData.forEach(item => {
+                selectedQuantities[item.name] = 0;
+            });
+        }
+
+        // 渲染服务项目（支持多维度搜索）
+        function renderServices(data) {
+            serviceContainer.innerHTML = "";
+            if (data.length === 0) {
+                noResult.style.display = "block";
+                return;
+            }
+            noResult.style.display = "none";
+
+            // 按分类分组
+            const categoryMap = {};
+            data.forEach(item => {
+                if (!categoryMap[item.category]) categoryMap[item.category] = [];
+                categoryMap[item.category].push(item);
+            });
+
+            // 遍历分类生成DOM
+            for (const [catName, items] of Object.entries(categoryMap)) {
+                const categoryDiv = document.createElement("div");
+                categoryDiv.className = "category-block";
+                
+                let itemHtml = "";
+                items.forEach(item => {
+                    const sliceTag = item.isSlice ? `<span class="slice-tag">2片起切</span>` : "";
+                    const notAloneTag = item.notAlone ? `<span class="not-alone-tag">不单接</span>` : "";
+                    const descHtml = item.desc ? `<div class="desc">${item.desc}</div>` : "";
+                    const noteHtml = item.note ? `<div class="note">备注：${item.note}</div>` : "";
+                    const storedQty = selectedQuantities[item.name] || 0; // 获取已存储的数量
+                    const hasValueClass = storedQty > 0 ? "has-value" : ""; // 有值时高亮输入框
+
+                    itemHtml += `
+                        <tr>
+                            <td style="width: 30%;">
+                                ${item.name}${sliceTag}${notAloneTag}
+                                ${descHtml}
+                                ${noteHtml}
+                            </td>
+                            <td style="width: 12%;" class="price-red">${item.price}</td>
+                            <td style="width: 10%;" class="unit-green">${item.unit}</td>
+                            <td style="width: 48%;">
+                                <input type="number" min="0" class="qty-input ${item.isSlice ? 'slice-input' : ''} ${hasValueClass}" 
+                                    data-name="${item.name}"
+                                    data-price="${item.price}"
+                                    data-unit="${item.unit}"
+                                    data-slice="${item.isSlice}"
+                                    data-notalone="${item.notAlone}"
+                                    value="${storedQty}"
+                                    placeholder="${item.isSlice ? '≥2' : '≥0'}">
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                categoryDiv.innerHTML = `
+                    <div class="category-title">${catName}</div>
+                    <table class="service-table">
+                        <thead>
+                            <tr>
+                                <th>服务名称</th>
+                                <th>价格（元）</th>
+                                <th>单位</th>
+                                <th>选择数量</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemHtml}
+                        </tbody>
+                    </table>
+                `;
+                serviceContainer.appendChild(categoryDiv);
+            }
+
+            // 绑定输入框变化事件（实时保存数量）
+            bindQtyInputEvents();
+        }
+
+        // 更新搜索统计信息
+        function updateSearchStats(count) {
+            let statsText = `共 ${count} 个检测项目`;
+            if (lastSearchKeyword) {
+                statsText = `搜索「${lastSearchKeyword}」找到 ${count} 个结果 (${currentSearchType === 'all' ? '全维度' : 
+                    currentSearchType === 'name' ? '服务名称' : 
+                    currentSearchType === 'category' ? '分类' : 
+                    currentSearchType === 'price' ? '价格' : '描述/备注'})`;
+            }
+            searchStats.textContent = statsText;
+            
+            // 显示/隐藏清除按钮
+            if (lastSearchKeyword) {
+                clearSearch.classList.add("active");
+            } else {
+                clearSearch.classList.remove("active");
+            }
+        }
+
+        // 清空搜索输入框
+        function clearSearchInput() {
+            searchInput.value = "";
+            lastSearchKeyword = "";
+            handleSearch();
+            clearSearch.classList.remove("active");
+        }
+
+        // 绑定数量输入框事件（核心：实时保存输入的数量到全局存储）
+        function bindQtyInputEvents() {
+            const qtyInputs = document.querySelectorAll(".qty-input");
+            qtyInputs.forEach(input => {
+                input.addEventListener("input", function() {
+                    const serviceName = this.dataset.name;
+                    const inputQty = parseInt(this.value) || 0;
+                    // 保存数量到全局存储
+                    selectedQuantities[serviceName] = inputQty;
+                    // 有值时高亮输入框
+                    if (inputQty > 0) {
+                        this.classList.add("has-value");
+                    } else {
+                        this.classList.remove("has-value");
+                    }
+                    // 更新已选项目提示
+                    updateSelectedTip();
+                });
+            });
+        }
+
+        // 增强版搜索（支持多维度筛选）
+        function handleSearch() {
+            lastSearchKeyword = searchInput.value.trim().toLowerCase();
+            let filteredData = [];
+            
+            if (!lastSearchKeyword) {
+                filteredData = originalData;
+            } else {
+                filteredData = originalData.filter(item => {
+                    switch(currentSearchType) {
+                        case "name":
+                            return item.name.toLowerCase().includes(lastSearchKeyword);
+                        case "category":
+                            return item.category.toLowerCase().includes(lastSearchKeyword);
+                        case "price":
+                            return item.price.toString().includes(lastSearchKeyword);
+                        case "desc":
+                            return item.desc.toLowerCase().includes(lastSearchKeyword) || item.note.toLowerCase().includes(lastSearchKeyword);
+                        default: // all
+                            return item.category.toLowerCase().includes(lastSearchKeyword) ||
+                                   item.name.toLowerCase().includes(lastSearchKeyword) ||
+                                   item.price.toString().includes(lastSearchKeyword) ||
+                                   item.unit.toLowerCase().includes(lastSearchKeyword) ||
+                                   item.desc.toLowerCase().includes(lastSearchKeyword) ||
+                                   item.note.toLowerCase().includes(lastSearchKeyword);
+                    }
+                });
+            }
+            
+            // 更新搜索统计
+            updateSearchStats(filteredData.length);
+            // 渲染筛选后的项目（加载已存储数量）
+            renderServices(filteredData);
+        }
+
+        // 更新已选项目提示条
+        function updateSelectedTip() {
+            // 统计已选数量>0的项目个数
+            const count = Object.values(selectedQuantities).filter(qty => qty > 0).length;
+            selectedCount.textContent = count;
+            // 有已选项目时显示提示条
+            if (count > 0) {
+                selectedTip.classList.add("active");
+            } else {
+                selectedTip.classList.remove("active");
+            }
+        }
+
+        // 解析Excel
+        function parseExcel(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+                alert("请选择.xlsx或.xls格式文件！");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: "array" });
+                    const firstSheet = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheet];
+                    const excelData = XLSX.utils.sheet_to_json(worksheet);
+
+                    const requiredKeys = ["服务分类", "服务名称", "价格（元）", "单位"];
+                    const isValid = excelData.every(item => requiredKeys.every(key => item.hasOwnProperty(key)));
+                    if (!isValid) throw new Error("需包含【服务分类、服务名称、价格（元）、单位】列");
+
+                    const formattedData = excelData.map(item => {
+                        const name = (item["服务名称"] || "").trim();
+                        const serviceName = name.replace(SLICE_FLAG, "").trim();
+                        // 保留已选数量（如果新数据中有同名项目）
+                        const storedQty = selectedQuantities[serviceName] || 0;
+                        selectedQuantities[serviceName] = storedQty;
+
+                        return {
+                            category: (item["服务分类"] || "未分类").trim(),
+                            name: serviceName,
+                            price: parseFloat(item["价格（元）"]) || 0,
+                            unit: (item["单位"] || "").trim(),
+                            desc: (item["内容/应用"] || "").trim(),
+                            note: (item["备注"] || "").trim(),
+                            isSlice: name.includes(SLICE_FLAG),
+                            notAlone: (item["样本数量"] || "").trim() === NOT_ALONE
+                        };
+                    }).filter(item => item.name && item.price > 0);
+
+                    const uniqueData = [];
+                    const nameSet = new Set();
+                    formattedData.forEach(item => {
+                        if (!nameSet.has(item.name)) {
+                            nameSet.add(item.name);
+                            uniqueData.push(item);
+                        }
+                    });
+
+                    originalData = uniqueData;
+                    renderServices(originalData);
+                    updateSelectedTip();
+                    updateSearchStats(uniqueData.length);
+                    alert(`解析成功！加载${uniqueData.length}个项目`);
+                } catch (err) {
+                    alert(`解析失败：${err.message}`);
+                } finally {
+                    fileInput.value = "";
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 计算报价
+        function calculateQuote() {
+            const selectedItems = [];
+            let grandTotal = 0;
+
+            // 遍历所有项目，收集已选数量>0的项目
+            originalData.forEach(item => {
+                const inputQty = selectedQuantities[item.name] || 0;
+                if (inputQty <= 0) return;
+
+                const isSlice = item.isSlice;
+                const price = parseFloat(item.price);
+                const actualQty = isSlice && inputQty < MIN_SLICE ? MIN_SLICE : inputQty;
+                const itemTotal = price * actualQty;
+
+                selectedItems.push({
+                    cat: item.category,
+                    name: item.name,
+                    price: price,
+                    unit: item.unit,
+                    inputQty: inputQty,
+                    actualQty: actualQty,
+                    itemTotal: itemTotal,
+                    isSlice: isSlice,
+                    notAlone: item.notAlone
+                });
+                grandTotal += itemTotal;
+            });
+
+            if (selectedItems.length === 0) {
+                resultList.innerHTML = `<div class="result-item"><span class="result-name">请选择项目并计算</span><span class="result-amount">-</span></div>`;
+                totalAmount.textContent = "¥0.00";
+                quoteDetails.textContent = `病理检测报价单
+===================
+
+选择的检测项目:
+- 暂无选择
+
+费用计算规则:
+- 切片类项目: 2片起切，输入数量<2时按2片计算
+- 其他项目: 无起切限制，按实际输入计算
+
+费用计算:
+- 总计: ¥0.00
+
+备注:
+1. 搜索支持多维度筛选（名称/分类/价格/描述），结果实时展示
+2. 搜索仅筛选项目展示，已填数量不会丢失，支持跨搜索累计选择
+3. 标注"不单接"的项目需结合其他项目选择
+4. 实际费用以最终确认的检测项目为准`;
+                return;
+            }
+
+            let resultHtml = "";
+            selectedItems.forEach(item => {
+                const sliceMark = item.isSlice ? "【切片类】" : "";
+                const qtyNote = item.isSlice && item.inputQty < MIN_SLICE ? `(输${item.inputQty}按2片)` : "";
+                resultHtml += `<div class="result-item"><span class="result-name">${sliceMark}${item.name}</span><span class="result-amount">¥${item.itemTotal.toFixed(2)} ${qtyNote}</span></div>`;
+            });
+            resultList.innerHTML = resultHtml;
+            totalAmount.textContent = `¥${grandTotal.toFixed(2)}`;
+
+            let detailText = `病理检测报价单
+===================
+生成时间: ${new Date().toLocaleString()}
+价格来源: 自定义Excel模板（共${originalData.length}个项目）
+
+【费用计算规则】
+- 切片类项目：2片起切，输入数量＜2时自动按2片计算
+- 常规类项目：无起切限制，按实际输入数量计算
+- 搜索功能：支持多维度筛选（名称/分类/价格/描述），已填数量不会丢失
+
+【选中检测项目(${selectedItems.length}项)】
+`;
+            selectedItems.forEach((item, index) => {
+                const qtyText = item.isSlice && item.inputQty < MIN_SLICE 
+                    ? `${item.actualQty}${item.unit}（输入${item.inputQty}${item.unit}，按2片起切）` 
+                    : `${item.actualQty}${item.unit}`;
+                detailText += `${index+1}. ${item.name}: ${qtyText} × ${item.price}元 = ¥${item.itemTotal.toFixed(2)}\n`;
+            });
+            detailText += `
+【费用统计】
+- 总计金额: ¥${grandTotal.toFixed(2)}
+
+【备注】
+1. 标注"不单接"的项目需结合其他项目结算
+2. 样本数量超过50个可申请批量折扣
+3. 检测周期：常规3-7个工作日，特殊项目7-10个工作日
+4. 加急服务需额外支付30%费用，周期1-3个工作日
+5. 报价有效期7天，实际费用以最终确认为准`;
+            quoteDetails.textContent = detailText;
+        }
+
+        // 重置选择
+        function resetAllSelect() {
+            // 清空所有项目的已选数量
+            originalData.forEach(item => {
+                selectedQuantities[item.name] = 0;
+            });
+            // 重新渲染（输入框显示0）
+            renderServices(originalData);
+            // 更新提示条
+            updateSelectedTip();
+            // 重置报价结果
+            resultList.innerHTML = `<div class="result-item"><span class="result-name">请选择项目并计算</span><span class="result-amount">-</span></div>`;
+            totalAmount.textContent = "¥0.00";
+            quoteDetails.textContent = `病理检测报价单
+===================
+
+选择的检测项目:
+- 暂无选择
+
+费用计算规则:
+- 切片类项目: 2片起切，输入数量<2时按2片计算
+- 其他项目: 无起切限制，按实际输入计算
+
+费用计算:
+- 总计: ¥0.00
+
+备注:
+1. 搜索支持多维度筛选（名称/分类/价格/描述），结果实时展示
+2. 搜索仅筛选项目展示，已填数量不会丢失，支持跨搜索累计选择
+3. 标注"不单接"的项目需结合其他项目选择
+4. 实际费用以最终确认的检测项目为准`;
+        }
+
+        // 恢复默认价格
+        function resetDefault() {
+            originalData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+            // 重新初始化已选数量（保留已选的数量，仅恢复价格和项目信息）
+            initSelectedQuantities();
+            renderServices(originalData);
+            searchInput.value = "";
+            lastSearchKeyword = "";
+            updateSearchStats(originalData.length);
+            noResult.style.display = "none";
+            updateSelectedTip();
+            alert("已恢复默认价格体系");
+        }
+
+        // 下载Excel模板
+        function downloadTemplate() {
+            const template = originalData.map(item => ({
+                "服务分类": item.category,
+                "服务名称": item.name + (item.isSlice ? "【2片起切】" : ""),
+                "价格（元）": item.price,
+                "单位": item.unit,
+                "样本数量": item.notAlone ? NOT_ALONE : "",
+                "检测项目数量": "",
+                "合计": "",
+                "实验报告周期到样后结算": "",
+                "结果图片案例": "",
+                "内容/应用": item.desc,
+                "备注": item.note
+            }));
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(template);
+            XLSX.utils.book_append_sheet(wb, ws, "病理检测价格表");
+            XLSX.writeFile(wb, "病理检测价格表模板.xlsx");
+        }
+
+        // 导出报价单
+        function exportQuote() {
+            const selectedItems = [];
+            let grandTotal = 0;
+
+            originalData.forEach(item => {
+                const inputQty = selectedQuantities[item.name] || 0;
+                if (inputQty <= 0) return;
+
+                const isSlice = item.isSlice;
+                const price = parseFloat(item.price);
+                const actualQty = isSlice && inputQty < MIN_SLICE ? MIN_SLICE : inputQty;
+                const itemTotal = price * actualQty;
+
+                selectedItems.push({
+                    "服务分类": item.category,
+                    "服务名称": item.name,
+                    "单价(元)": price,
+                    "输入数量": inputQty,
+                    "计费数量": actualQty,
+                    "小计(元)": itemTotal.toFixed(2),
+                    "备注": isSlice ? "2片起切" : (item.notAlone ? "不单接" : "")
+                });
+                grandTotal += itemTotal;
+            });
+
+            if (selectedItems.length === 0) {
+                alert("请先选择检测项目并计算报价！");
+                return;
+            }
+
+            // 添加总计行
+            selectedItems.push({
+                "服务分类": "",
+                "服务名称": "总计",
+                "单价(元)": "",
+                "输入数量": "",
+                "计费数量": "",
+                "小计(元)": grandTotal.toFixed(2),
+                "备注": ""
+            });
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(selectedItems);
+            XLSX.utils.book_append_sheet(wb, ws, "病理检测报价单");
+            const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+            XLSX.writeFile(wb, `病理检测报价单_${timestamp}.xlsx`);
+        }
+    </script>
+</body>
+</html>
