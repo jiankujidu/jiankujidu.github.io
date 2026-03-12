@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的导航 - 编辑版</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}
+:root{--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--accent:#3b82f6;--hover:#2563eb;--shadow:0 8px 30px rgba(0,0,0,.06)}
+@media(prefers-color-scheme:dark){:root{--bg:#0f172a;--card:#1e293b;--text:#f1f5f9;--muted:#94a3b8;--border:#334155;--accent:#3b82f6;--hover:#60a5fa;--shadow:0 8px 30px rgba(0,0,0,.2)}}
+body{background:var(--bg);color:var(--text);padding:20px;max-width:1000px;margin:0 auto}
+header{text-align:center;margin:40px 0}header h1{font-size:30px;font-weight:700;margin-bottom:8px}header p{color:var(--muted)}
+.bar{display:flex;gap:12px;margin-bottom:24px}
+.btn{padding:10px 16px;border-radius:12px;border:none;background:var(--accent);color:#fff;cursor:pointer}
+.btn.gray{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.editor{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:30px}
+.editor input{width:100%;margin-bottom:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg)}
+.sect{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.sect:last-child{border-bottom:0}
+.link-item{display:flex;gap:8px;margin-top:8px}
+.link-item input{flex:1;margin:0}
+.preview{margin-top:40px;padding-top:30px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+<header>
+<h1>我的导航</h1>
+<p>编辑 → 保存 → 生成新网页</p>
+</header>
+
+<div class="bar">
+<button class="btn" onclick="saveHtml()">💾 保存生成 index.html</button>
+<button class="btn gray" onclick="addSect()">➕ 添加分类</button>
+</div>
+
+<div class="editor" id="editor"></div>
+
+<div class="preview">
+<small>预览</small>
+</div>
+
+<script>
+let data = [
+  {name:"常用工具", links:[{name:"工作后台",url:"#"},{name:"云盘",url:"#"},{name:"图片处理",url:"#"}]},
+  {name:"学习资料", links:[{name:"学习平台",url:"#"},{name:"电子书",url:"#"},{name:"文献查询",url:"#"}]},
+  {name:"生活娱乐", links:[{name:"影视",url:"#"},{name:"音乐",url:"#"},{name:"购物",url:"#"}]}
+]
+
+function render(){
+  let e=document.getElementById('editor');e.innerHTML='';
+  data.forEach((s,i)=>{
+    let d=document.createElement('div');d.className='sect';
+    d.innerHTML+=`<input placeholder="分类名称" value="${s.name}" oninput="data[${i}].name=this.value">`;
+    s.links.forEach((l,j)=>{
+      d.innerHTML+=`<div class="link-item">
+        <input placeholder="网站名" value="${l.name}" oninput="data[${i}].links[${j}].name=this.value">
+        <input placeholder="网址" value="${l.url}" oninput="data[${i}].links[${j}].url=this.value">
+        <button class="btn gray" onclick="delLink(${i},${j})">−</button>
+      </div>`;
+    });
+    d.innerHTML+=`<button class="btn gray" onclick="addLink(${i})">+ 链接</button> <button class="btn gray" onclick="delSect(${i})">删除分类</button>`;
+    e.appendChild(d);
+  })
+}
+function addSect(){data.push({name:"新分类",links:[]});render()}
+function delSect(i){data.splice(i,1);render()}
+function addLink(i){data[i].links.push({name:"名称",url:"https://"});render()}
+function delLink(i,j){data[i].links.splice(j,1);render()}
+
+function saveHtml(){
+  let t=`<div class="search"><input type="text" placeholder="搜索站点…" id="search"></div>`;
+  data.forEach(s=>{
+    t+=`<div class="section"><h2>${s.name}</h2><div class="grid">`;
+    s.links.forEach(n=>{t+=`<a href="${n.url}" class="item"><div class="ico">${n.name.charAt(0)}</div><div class="name">${n.name}</div></a>`});
+    t+='</div></div>';
+  });
+  let html=`<!DOCTYPE html><html lang="zh-CN"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>我的导航</title>
+<style>*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacFont,Segoe UI,Roboto,sans-serif}:root{--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--accent:#3b82f6;--hover:#2563eb;--shadow:0 8px 30px rgba(0,0,0,.06)}@media(prefers-color-scheme:dark){:root{--bg:#0f172a;--card:#1e293b;--text:#f1f5f9;--muted:#94a3b8;--border:#334155;--accent:#3b82f6;--hover:#60a5fa;--shadow:0 8px 30px rgba(0,0,0,.2)}}body{background:var(--bg);color:var(--text);padding:20px;max-width:1000px;margin:0 auto}header{text-align:center;margin:50px 0 32px}header h1{font-size:30px;font-weight:700;margin-bottom:8px}header p{color:var(--muted);font-size:15px}.search{margin:0 auto 40px;max-width:520px}.search input{width:100%;height:50px;border-radius:16px;border:1px solid var(--border);background:var(--card);color:var(--text);padding:0 18px;font-size:16px;outline:none;box-shadow:var(--shadow);transition:.2s}.search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.15)}.section{margin-bottom:36px}.section h2{font-size:17px;font-weight:600;margin-bottom:14px;padding-left:10px;border-left:4px solid var(--accent)}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}.item{background:var(--card);border-radius:14px;padding:18px 16px;text-decoration:none;color:var(--text);display:flex;align-items:center;gap:12px;border:1px solid var(--border);transition:.25s}.item:hover{transform:translateY(-3px);border-color:var(--accent);background:var(--accent);color:#fff;box-shadow:var(--shadow)}.item .ico{width:36px;height:36px;border-radius:10px;background:rgba(59,130,246,.1);display:grid;place-items:center;font-weight:600;color:var(--accent)}.item:hover .ico{background:rgba(255,255,255,.2);color:#fff}.item .name{font-size:15px;font-weight:500}</style>
+</head><body>
+<header><h1>我的导航</h1><p>简洁高效 · 一键直达</p></header>${t}
+<script>const se=document.getElementById('search');se.oninput=()=>{const v=se.value.toLowerCase();document.querySelectorAll('.item').forEach(i=>{i.style.display=i.textContent.toLowerCase().includes(v)?'flex':'none'})}</scr`+`ipt></body></html>`;
+  let blob=new Blob([html],{type:'text/html'});
+  let a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='index.html';
+  a.click();
+}
+render();
+</script>
+</body>
+</html>
