@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELISA检测服务代测表填写</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        h1 {
+            text-align: center;
+            color: #2980b9;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+        }
+        /* 步骤进度条样式 */
+        .step-progress {
+            display: flex;
+            justify-content: space-between;
+            margin: 30px 0 40px;
+            counter-reset: step;
+        }
+        .step-item {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        .step-item::before {
+            counter-increment: step;
+            content: counter(step);
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            border-radius: 50%;
+            background-color: #ddd;
+            color: #666;
+            display: block;
+            margin: 0 auto 10px;
+            font-weight: bold;
+        }
+        .step-item.active::before {
+            background-color: #3498db;
+            color: white;
+        }
+        .step-item.completed::before {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .step-item span {
+            font-size: 0.9em;
+            color: #777;
+        }
+        .step-item.active span {
+            color: #3498db;
+            font-weight: bold;
+        }
+        /* 步骤内容区样式 */
+        .step-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            page-break-inside: avoid;
+        }
+        .step-content.active {
+            display: block;
+        }
+        /* 预览弹窗样式 */
+        .preview-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            overflow: auto;
+        }
+        .preview-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .preview-header h2 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        .close-preview {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-preview:hover {
+            color: #000;
+        }
+        .preview-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .preview-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .preview-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .preview-label {
+            width: 150px;
+            font-weight: bold;
+            color: #555;
+        }
+        .preview-value {
+            flex: 1;
+            color: #333;
+        }
+        .preview-sample-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        .preview-sample-table th, .preview-sample-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .preview-sample-table th {
+            background-color: #f2f2f2;
+        }
+        .preview-buttons {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .btn-preview-print {
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-preview-print:hover {
+            background: linear-gradient(to right, #27ae60, #219955);
+        }
+        .btn-edit {
+            background-color: #3498db;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .btn-edit:hover {
+            background-color: #2980b9;
+        }
+        /* 警示和注意框样式 */
+        .step-warning {
+            background-color: #fff5f5;
+            border: 2px solid #e74c3c;
+            border-left: 6px solid #e74c3c;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .step-warning strong {
+            color: #c0392b;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        .step-note {
+            background-color: #f0f9ff;
+            border: 1px solid #3498db;
+            border-left: 6px solid #3498db;
+            padding: 18px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .step-note strong {
+            color: #2980b9;
+            display: block;
+            margin-bottom: 8px;
+        }
+        /* 表单通用样式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #e8f4fc;
+            font-weight: bold;
+        }
+        .required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 250px;
+            margin-right: 20px;
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        input[type="text"], input[type="date"], input[type="tel"], textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 1em;
+        }
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+        /* 按钮样式 */
+        .step-buttons {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .btn {
+            padding: 12px 30px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        .print-btn-container {
+            text-align: center;
+            margin: 40px 0 20px;
+            padding-top: 20px;
+            border-top: 2px dashed #ddd;
+        }
+        .btn-print {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            color: white;
+            padding: 18px 50px;
+            font-size: 1.2em;
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+        }
+        .btn-print:hover {
+            background: linear-gradient(to right, #c0392b, #a93226);
+        }
+        /* 添加样本按钮样式 */
+        .add-sample-btn {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 0 20px;
+            display: inline-block;
+        }
+        .add-sample-btn:hover {
+            background-color: #27ae60;
+        }
+        /* 删除行按钮样式 */
+        .delete-row-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+        .delete-row-btn:hover {
+            background-color: #c0392b;
+        }
+        /* 操作按钮区域 */
+        .table-actions {
+            margin: 15px 0;
+            text-align: center;
+        }
+        /* 数据暂存功能按钮样式 */
+        .save-load-buttons {
+            text-align: center;
+            margin: 0 0 25px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px dashed #3498db;
+        }
+        .save-btn, .load-btn, .clear-btn {
+            padding: 10px 20px;
+            margin: 0 8px 10px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .save-btn {
+            background-color: #3498db;
+            color: white;
+        }
+        .save-btn:hover { background-color: #2980b9; }
+        .load-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .load-btn:hover { background-color: #27ae60; }
+        .clear-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .clear-btn:hover { background-color: #c0392b; }
+        @media print {
+            .step-progress, .step-buttons, .print-btn-container, 
+            .save-load-buttons, .add-sample-btn, .delete-row-btn,
+            .table-actions, .preview-modal { display: none !important; }
+            .step-content { display: block !important; box-shadow: none; border: 1px solid #ccc; margin-bottom: 20px; }
+            body { background: white; padding: 0; }
+            input, textarea, select {
+                border: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>ELISA检测服务 - 分步填写、预览与提交表</h1>
+    <p style="text-align: center; color: #7f8c8d; margin-bottom: 20px;">请按步骤填写以下信息，预览确认无误后再打印，随样本一同寄出。</p>
+
+    <!-- 步骤进度指示器 -->
+    <div class="step-progress">
+        <div class="step-item active" id="step1-indicator">
+            <span>1. 客户与实验信息</span>
+        </div>
+        <div class="step-item" id="step2-indicator">
+            <span>2. 样本详细信息</span>
+        </div>
+        <div class="step-item" id="step3-indicator">
+            <span>3. 样本处理参考</span>
+        </div>
+        <div class="step-item" id="step4-indicator">
+            <span>4. 确认与打印</span>
+        </div>
+    </div>
+
+    <!-- 步骤1：客户与实验信息 -->
+    <div class="step-content active" id="step1">
+        <h2>步骤一：填写客户与实验核心信息</h2>
+        
+        <!-- 数据暂存功能面板 -->
+        <div class="save-load-buttons">
+            <p style="margin-top:0; color:#666; font-size:0.95em;">担心填到一半数据丢失？您可以将当前填写的内容保存到浏览器本地，下次打开页面时再加载回来。</p>
+            <button class="save-btn" onclick="saveFormData()">💾 保存当前进度</button>
+            <button class="load-btn" onclick="loadFormData()">📂 加载已存进度</button>
+            <button class="clear-btn" onclick="clearFormData()">🗑️ 清空已存数据</button>
+            <p id="saveStatus" style="margin: 10px 0 0; font-size:0.9em; min-height: 20px;"></p>
+        </div>
+        
+        <div class="step-warning">
+            <strong>⚠️ 寄样前必读！违反可能导致样本报废或实验失败：</strong>
+            <ol>
+                <li><strong>自行备份样本</strong>：实验后剩余样本不予寄回，将作为废品处理。</li>
+                <li><strong>寄送足量</strong>：请比计算量<strong>多寄送50-100μl</strong>，避免样本不足无法检测。</li>
+                <li><strong>规范包装</strong>：请使用1.5ml EP管分装 → 按组放入自封袋并标记 → 使用<strong>干冰+冰袋+泡沫箱</strong>运输。</li>
+                <li><strong>反馈时效</strong>：报告出具后<strong>一个月内</strong>可反馈疑问，超期视为结果有效。</li>
+            </ol>
+        </div>
+
+        <h3>1. 客户与寄送信息</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="required">客户姓名</label>
+                <input type="text" id="client_name" placeholder="请输入您的姓名" required>
+            </div>
+            <div class="form-group">
+                <label class="required">联系电话</label>
+                <input type="tel" id="client_phone" placeholder="用于实验沟通" required>
+            </div>
+            <div class="form-group">
+                <label class="required">单位/学校</label>
+                <input type="text" id="client_company" placeholder="请输入单位全称" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="required">快递单号</label>
+                <input type="text" id="tracking_number" placeholder="寄出后填写顺丰单号" required>
+                <small style="color:#666;">请使用顺丰快递，本表需随样寄出。</small>
+            </div>
+            <div class="form-group">
+                <label>订单编号 (如有)</label>
+                <input type="text" id="order_number" placeholder="内部订单号，如无则留空">
+            </div>
+        </div>
+
+        <h3>2. 实验核心参数（技术员将严格按此执行）</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="required">样本种属</label>
+                <input type="text" id="species" placeholder="如：人、C57BL/6小鼠、SD大鼠" required>
+            </div>
+            <div class="form-group">
+                <label class="required">样本类型</label>
+                <select id="sample_type" required>
+                    <option value="">-- 请选择 --</option>
+                    <option value="血清">血清</option>
+                    <option value="血浆">血浆</option>
+                    <option value="组织匀浆">组织匀浆</option>
+                    <option value="细胞上清">细胞培养上清</option>
+                    <option value="细胞裂解液">细胞裂解液</option>
+                    <option value="尿液">尿液</option>
+                    <option value="其他">其他（请在备注说明）</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="required">样本总数 (EP管数)</label>
+                <input type="text" id="sample_count" placeholder="本次寄送的EP管总数" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+                <label class="required">检测指标名称</label>
+                <input type="text" id="index_name" placeholder="请填写待测因子的准确名称，中英文皆可" required>
+                <small style="color:#666;">例如：白细胞介素-6 (IL-6)，肿瘤坏死因子-α (TNF-α)</small>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+                <label class="required">实验目的简述</label>
+                <textarea id="exp_purpose" placeholder="请简要说明，如：比较A、B药物对小鼠肝脏炎症的影响" required></textarea>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+                <label>样本分组与处理说明（供技术员参考）</label>
+                <textarea id="sample_group_info" placeholder="请详细说明实验分组（如：Control, Model, Drug-L, Drug-H），以及样本对应的处理条件（如：给药剂量、时间、造模方式等）。"></textarea>
+                <small style="color:#666;">清晰的分组信息对后续数据分析至关重要。</small>
+            </div>
+        </div>
+
+        <div class="step-buttons">
+            <button class="btn btn-primary" onclick="validateStep1()">下一步：填写样本详情</button>
+        </div>
+    </div>
+
+    <!-- 步骤2：样本详细信息 -->
+    <div class="step-content" id="step2">
+        <h2>步骤二：填写每一个样本的详细信息</h2>
+        
+        <div class="step-warning">
+            <strong>⚠️ 技术员重要核对依据！请务必仔细填写：</strong>
+            <p>实验将严格按照本表"<strong>样本编号</strong>"执行。如果实际收到样本的编号与本表填写不一致，<strong>将以实际EP管标签为准进行实验，这可能导致您的分组信息完全错误。</strong> 请在寄出前，逐一核对EP管标签与本表编号。</p>
+        </div>
+
+        <div class="step-note">
+            <strong>📋 填写示例（前3个样本）：</strong>
+            <table style="font-size:0.9em; margin:10px 0;">
+                <thead>
+                    <tr><th>序号</th><th>样本编号*</th><th>样本分组</th><th>样本类型</th><th>样本量</th><th>备注</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>1</td><td><strong>S-01</strong></td><td>对照组</td><td>血清</td><td>150μl</td><td>无溶血</td></tr>
+                    <tr><td>2</td><td><strong>S-02</strong></td><td>低剂量组</td><td>血清</td><td>150μl</td><td>无溶血</td></tr>
+                    <tr><td>3</td><td><strong>S-03</strong></td><td>高剂量组</td><td>血清</td><td>150μl</td><td>无溶血</td></tr>
+                </tbody>
+            </table>
+            <p>请参照此格式，在下方填写您的样本信息。<strong>"样本编号"必须与贴在EP管上的标签完全一致。</strong></p>
+        </div>
+
+        <h3>您的样本信息表（请从第1行开始填写）</h3>
+        <div class="table-actions">
+            <button class="add-sample-btn" onclick="addSampleRow()">➕ 添加新样本行</button>
+            <p style="font-size:0.9em; color:#666; margin-top:5px;">如果您的样本数量超过下方显示的行数，请点击此按钮添加新行</p>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th width="5%">序号</th>
+                    <th width="13%">样本类型</th>
+                    <th width="13%" class="required">样本编号</th>
+                    <th width="13%">样本分组</th>
+                    <th width="12%">样本量</th>
+                    <th width="10%">保存温度(℃)</th>
+                    <th width="12%">收集日期</th>
+                    <th width="17%">备注 / 特殊要求</th>
+                    <th width="5%">操作</th>
+                </tr>
+            </thead>
+            <tbody id="dynamicSampleTable">
+                <!-- 行将由JavaScript动态生成 -->
+            </tbody>
+        </table>
+        
+        <div class="table-actions">
+            <button class="add-sample-btn" onclick="addSampleRow()">➕ 添加新样本行</button>
+            <p style="font-size:0.9em; color:#666; margin-top:5px;">已添加 <span id="rowCountDisplay">5</span> 个样本行</p>
+        </div>
+
+        <div class="step-buttons">
+            <button class="btn btn-secondary" onclick="showStep(1)">上一步</button>
+            <button class="btn btn-primary" onclick="showStep(3)">下一步：查看处理指南</button>
+        </div>
+    </div>
+
+    <!-- 步骤3：样本处理参考 -->
+    <div class="step-content" id="step3">
+        <h2>步骤三：样本处理通用指南（供您参考与自查）</h2>
+        
+        <div class="step-note">
+            <strong>💡 本步骤仅为指南，无需填写：</strong>
+            <p>以下为样本处理的通用方法。请确保您的样本已按类似方法处理，以保证实验结果可靠性。如果您的样本处理方法特殊，请在步骤一的"备注"栏中说明。</p>
+        </div>
+
+        <h3>液体样本处理方法（通用）</h3>
+        <table>
+            <tr><th width="25%">样本类型</th><th>关键处理步骤与要点</th></tr>
+            <tr><td><strong>血清</strong></td><td><strong>关键：</strong>血液自然凝固10-20分钟 → <strong>离心（2-8°C, 2000-3000转/分, 20分钟）</strong> → 仔细收集上清。</td></tr>
+            <tr><td><strong>血浆</strong></td><td><strong>关键：</strong>必须使用抗凝剂（EDTA/肝素钠/柠檬酸钠）混合10-20分钟 → <strong>离心（条件同上）</strong> → 收集上清。</td></tr>
+            <tr><td><strong>尿液、细胞上清等</strong></td><td>直接按上述条件<strong>离心</strong> → 收集上清。</td></tr>
+        </table>
+
+        <h3>固体/细胞样本处理方法（通用）</h3>
+        <table>
+            <tr><th width="25%">样本类型</th><th>关键处理步骤与样本量要求</th></tr>
+            <tr><td><strong>组织</strong></td>
+                <td>
+                    <strong>步骤：</strong>称取1g组织 + 9ml PBS (pH7.2-7.4) → 充分匀浆 → 离心取上清。<br>
+                    <strong>⚠️ 样本量要求：</strong> 每个检测指标<strong>至少需100mg组织</strong>，因个体差异，<strong>建议提供1g以上</strong>。
+                </td>
+            </tr>
+            <tr><td><strong>培养细胞（胞内蛋白）</strong></td>
+                <td><strong>步骤：</strong>PBS重悬细胞(~10^6个/ml) → 反复冻融或超声破碎 → 离心取上清。</td></tr>
+        </table>
+
+        <div class="step-warning">
+            <strong>🚫 重要禁忌与保存要求：</strong>
+            <ul>
+                <li><strong>严禁NaN3（叠氮钠）：</strong> 样本中若含有NaN3，会彻底抑制检测所用的辣根过氧化物酶(HRP)活性，导致实验失败。</li>
+                <li><strong>避免反复冻融：</strong> 请将样本<strong>分装</strong>保存于-20°C或更低温度，确保每个EP管仅冻融1-2次。</li>
+                <li>以上为通用指南，特殊样本请参考文献处理。</li>
+            </ul>
+        </div>
+
+        <div class="step-buttons">
+            <button class="btn btn-secondary" onclick="showStep(2)">上一步</button>
+            <button class="btn btn-primary" onclick="showStep(4)">下一步：确认与打印</button>
+        </div>
+    </div>
+
+    <!-- 步骤4：确认与打印 -->
+    <div class="step-content" id="step4">
+        <h2>步骤四：确认与打印</h2>
+        
+        <div class="step-warning">
+            <strong>📦 最后确认与寄送提醒：</strong>
+            <ol>
+                <li>在打印前，请<strong>务必预览并核对</strong>您填写的所有信息。</li>
+                <li>将打印出的表格与处理好的样本，按<strong>"EP管 → 自封袋（标记组别）→ 干冰 → 泡沫箱"</strong>的顺序打包。</li>
+                <li>使用<strong>顺丰快递</strong>邮寄，并将快递单号反馈给对接人。</li>
+            </ol>
+        </div>
+
+        <div class="step-note" style="text-align: center; padding: 30px;">
+            <h3 style="color:#2980b9; margin-top:0;">您已填写完毕！</h3>
+            <p><strong>强烈建议：</strong>在打印前，先预览您填写的全部信息，确认无误后再打印。</p>
+            
+            <div class="print-btn-container">
+                <button class="btn-print" onclick="showPreview()" style="background:linear-gradient(to right, #3498db, #2980b9); margin-bottom: 15px;">👁️ 预览填写内容</button>
+                <br>
+                <button class="btn-print" onclick="window.print();">🖨️ 直接打印（不预览）</button>
+                <p style="margin-top:15px; color:#7f8c8d;">建议先预览确认，避免错误。打印后随样本一同寄出。</p>
+            </div>
+        </div>
+
+        <div class="step-buttons">
+            <button class="btn btn-secondary" onclick="showStep(3)">上一步：返回处理指南</button>
+        </div>
+    </div>
+
+    <!-- 预览弹窗 -->
+    <div id="previewModal" class="preview-modal">
+        <div class="preview-content">
+            <div class="preview-header">
+                <h2>填写内容预览</h2>
+                <span class="close-preview" onclick="closePreview()">&times;</span>
+            </div>
+            
+            <div id="previewContent">
+                <!-- 预览内容将动态生成到这里 -->
+            </div>
+            
+            <div class="preview-buttons">
+                <button class="btn-preview-print" onclick="printFromPreview()">✅ 确认无误，立即打印</button>
+                <button class="btn-edit" onclick="closePreview()">返回修改</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentStep = 1;
+        const totalSteps = 4;
+        let sampleRowCount = 0;
+        
+        // 分步显示逻辑
+        function showStep(stepNumber) {
+            // 隐藏所有步骤内容
+            for (let i = 1; i <= totalSteps; i++) {
+                document.getElementById(`step${i}`).classList.remove('active');
+                const indicator = document.getElementById(`step${i}-indicator`);
+                indicator.classList.remove('active', 'completed');
+            }
+            // 显示目标步骤
+            document.getElementById(`step${stepNumber}`).classList.add('active');
+            // 更新进度指示器
+            for (let i = 1; i <= stepNumber; i++) {
+                const indicator = document.getElementById(`step${i}-indicator`);
+                if (i === stepNumber) {
+                    indicator.classList.add('active');
+                } else {
+                    indicator.classList.add('completed');
+                }
+            }
+            currentStep = stepNumber;
+            window.scrollTo(0, 0);
+        }
+        
+        // 步骤1验证
+        function validateStep1() {
+            const requiredFields = [
+                'client_name', 'client_phone', 'client_company', 
+                'tracking_number', 'species', 'sample_type', 
+                'sample_count', 'index_name', 'exp_purpose'
+            ];
+            
+            let isValid = true;
+            let firstInvalidField = null;
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.style.borderColor = '#e74c3c';
+                    if (!firstInvalidField) firstInvalidField = field;
+                } else {
+                    field.style.borderColor = '#2ecc71';
+                }
+            });
+            
+            if (isValid) {
+                showStep(2);
+            } else {
+                alert('请填写所有必填项（标*号）');
+                if (firstInvalidField) firstInvalidField.focus();
+            }
+        }
+        
+        // 动态样本行管理功能
+        function generateInitialSampleRows() {
+            const tbody = document.getElementById('dynamicSampleTable');
+            tbody.innerHTML = '';
+            sampleRowCount = 0;
+            
+            // 初始生成5行
+            for (let i = 1; i <= 5; i++) {
+                addSampleRow();
+            }
+        }
+        
+        function addSampleRow() {
+            sampleRowCount++;
+            const tbody = document.getElementById('dynamicSampleTable');
+            const newRow = document.createElement('tr');
+            newRow.id = `sampleRow_${sampleRowCount}`;
+            
+            newRow.innerHTML = `
+                <td>${sampleRowCount}</td>
+                <td><input type="text" name="stype_${sampleRowCount}" placeholder="如：血清"></td>
+                <td><input type="text" name="sid_${sampleRowCount}" placeholder="必填，如：S-${sampleRowCount}" class="sample-id" required></td>
+                <td><input type="text" name="sgroup_${sampleRowCount}" placeholder="如：Control"></td>
+                <td><input type="text" name="svolume_${sampleRowCount}" placeholder="如：200μl"></td>
+                <td><input type="text" name="stemp_${sampleRowCount}" placeholder="-20"></td>
+                <td><input type="text" name="sdate_${sampleRowCount}" placeholder="2025-XX-XX"></td>
+                <td><input type="text" name="snote_${sampleRowCount}" placeholder="如有请填写"></td>
+                <td><button type="button" class="delete-row-btn" onclick="deleteSampleRow(${sampleRowCount})" ${sampleRowCount <= 5 ? 'disabled' : ''}>删除</button></td>
+            `;
+            
+            tbody.appendChild(newRow);
+            updateRowCountDisplay();
+        }
+        
+        function deleteSampleRow(rowId) {
+            const row = document.getElementById(`sampleRow_${rowId}`);
+            if (row && confirm('确定要删除这一行样本信息吗？')) {
+                row.remove();
+                renumberSampleRows();
+                updateRowCountDisplay();
+            }
+        }
+        
+        function renumberSampleRows() {
+            const rows = document.querySelectorAll('#dynamicSampleTable tr');
+            sampleRowCount = 0;
+            
+            rows.forEach((row, index) => {
+                sampleRowCount++;
+                row.cells[0].textContent = sampleRowCount;
+                row.id = `sampleRow_${sampleRowCount}`;
+                
+                const inputs = row.querySelectorAll('input');
+                inputs[0].name = `stype_${sampleRowCount}`;
+                inputs[1].name = `sid_${sampleRowCount}`;
+                inputs[2].name = `sgroup_${sampleRowCount}`;
+                inputs[3].name = `svolume_${sampleRowCount}`;
+                inputs[4].name = `stemp_${sampleRowCount}`;
+                inputs[5].name = `sdate_${sampleRowCount}`;
+                inputs[6].name = `snote_${sampleRowCount}`;
+                
+                const deleteBtn = row.querySelector('.delete-row-btn');
+                deleteBtn.onclick = function() { deleteSampleRow(sampleRowCount); };
+                deleteBtn.disabled = sampleRowCount <= 5;
+            });
+        }
+        
+        function updateRowCountDisplay() {
+            const rows = document.querySelectorAll('#dynamicSampleTable tr');
+            document.getElementById('rowCountDisplay').textContent = rows.length;
+        }
+        
+        // 表单数据本地暂存/加载功能
+        function saveFormData() {
+            const formData = {};
+            
+            // 1. 收集步骤一的核心表单数据
+            formData.client = {
+                name: document.getElementById('client_name').value,
+                phone: document.getElementById('client_phone').value,
+                company: document.getElementById('client_company').value,
+                tracking: document.getElementById('tracking_number').value,
+                order: document.getElementById('order_number').value,
+                species: document.getElementById('species').value,
+                sampleType: document.getElementById('sample_type').value,
+                sampleCount: document.getElementById('sample_count').value,
+                indexName: document.getElementById('index_name').value,
+                purpose: document.getElementById('exp_purpose').value,
+                groupInfo: document.getElementById('sample_group_info').value
+            };
+            
+            // 2. 收集步骤二的样本表格数据
+            formData.samples = [];
+            const sampleRows = document.querySelectorAll('#dynamicSampleTable tr');
+            sampleRows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                if (inputs[1].value.trim() !== '') { // 如果样本编号不为空，则保存该行
+                    formData.samples.push({
+                        type: inputs[0].value,
+                        id: inputs[1].value,
+                        group: inputs[2].value,
+                        volume: inputs[3].value,
+                        temp: inputs[4].value,
+                        date: inputs[5].value,
+                        note: inputs[6].value
+                    });
+                }
+            });
+            
+            // 3. 保存到本地存储
+            try {
+                localStorage.setItem('elisaFormData', JSON.stringify(formData));
+                document.getElementById('saveStatus').innerHTML = '<span style="color:#27ae60;">✅ 进度已保存！数据已存储在此电脑的浏览器中。</span>';
+                setTimeout(() => {
+                    document.getElementById('saveStatus').innerHTML = '';
+                }, 3000);
+            } catch (e) {
+                document.getElementById('saveStatus').innerHTML = '<span style="color:#e74c3c;">❌ 保存失败：' + e.message + '</span>';
+            }
+        }
+        
+        function loadFormData() {
+            try {
+                const saved = localStorage.getItem('elisaFormData');
+                if (!saved) {
+                    document.getElementById('saveStatus').innerHTML = '<span style="color:#e67e22;">⚠️ 未找到已保存的数据。</span>';
+                    setTimeout(() => {
+                        document.getElementById('saveStatus').innerHTML = '';
+                    }, 2000);
+                    return;
+                }
+                
+                const formData = JSON.parse(saved);
+                
+                // 1. 恢复步骤一的核心表单数据
+                if (formData.client) {
+                    document.getElementById('client_name').value = formData.client.name || '';
+                    document.getElementById('client_phone').value = formData.client.phone || '';
+                    document.getElementById('client_company').value = formData.client.company || '';
+                    document.getElementById('tracking_number').value = formData.client.tracking || '';
+                    document.getElementById('order_number').value = formData.client.order || '';
+                    document.getElementById('species').value = formData.client.species || '';
+                    document.getElementById('sample_type').value = formData.client.sampleType || '';
+                    document.getElementById('sample_count').value = formData.client.sampleCount || '';
+                    document.getElementById('index_name').value = formData.client.indexName || '';
+                    document.getElementById('exp_purpose').value = formData.client.purpose || '';
+                    document.getElementById('sample_group_info').value = formData.client.groupInfo || '';
+                }
+                
+                // 2. 恢复步骤二的样本表格数据
+                if (formData.samples && formData.samples.length > 0) {
+                    // 首先清空现有行
+                    const tbody = document.getElementById('dynamicSampleTable');
+                    while (tbody.rows.length > 0) {
+                        tbody.deleteRow(0);
+                    }
+                    sampleRowCount = 0;
+                    
+                    // 根据保存的数据重新生成行
+                    formData.samples.forEach(sample => {
+                        addSampleRow();
+                        const lastRow = tbody.lastElementChild;
+                        const inputs = lastRow.querySelectorAll('input');
+                        
+                        inputs[0].value = sample.type || '';
+                        inputs[1].value = sample.id || '';
+                        inputs[2].value = sample.group || '';
+                        inputs[3].value = sample.volume || '';
+                        inputs[4].value = sample.temp || '';
+                        inputs[5].value = sample.date || '';
+                        inputs[6].value = sample.note || '';
+                    });
+                    
+                    // 如果保存的样本数少于5，补足到5行
+                    while (tbody.rows.length < 5) {
+                        addSampleRow();
+                    }
+                    
+                    renumberSampleRows();
+                    updateRowCountDisplay();
+                }
+                
+                document.getElementById('saveStatus').innerHTML = '<span style="color:#27ae60;">✅ 已保存的数据已加载！请检查各项信息。</span>';
+                setTimeout(() => {
+                    document.getElementById('saveStatus').innerHTML = '';
+                }, 3000);
+                
+            } catch (e) {
+                document.getElementById('saveStatus').innerHTML = '<span style="color:#e74c3c;">❌ 加载失败：数据可能已损坏。' + e.message + '</span>';
+            }
+        }
+        
+        function clearFormData() {
+            if (confirm('确定要清空所有已保存的表单数据吗？此操作不可撤销。')) {
+                localStorage.removeItem('elisaFormData');
+                document.getElementById('saveStatus').innerHTML = '<span style="color:#27ae60;">✅ 已保存的数据已清空。</span>';
+                setTimeout(() => {
+                    document.getElementById('saveStatus').innerHTML = '';
+                }, 2000);
+            }
+        }
+        
+        // 预览功能相关函数
+        function showPreview() {
+            const modal = document.getElementById('previewModal');
+            generatePreviewContent();
+            modal.style.display = 'block';
+        }
+        
+        function closePreview() {
+            document.getElementById('previewModal').style.display = 'none';
+        }
+        
+        function printFromPreview() {
+            closePreview();
+            // 稍等一会儿让弹窗关闭
+            setTimeout(() => {
+                window.print();
+            }, 100);
+        }
+        
+        // 点击弹窗外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('previewModal');
+            if (event.target == modal) {
+                closePreview();
+            }
+        }
+        
+        // 生成预览内容
+        function generatePreviewContent() {
+            const container = document.getElementById('previewContent');
+            let html = '';
+            
+            // 1. 客户与实验信息
+            html += `<div class="preview-section">
+                <h3>一、客户与实验信息</h3>`;
+            
+            const fields = [
+                {label: '客户姓名', id: 'client_name'},
+                {label: '联系电话', id: 'client_phone'},
+                {label: '单位/学校', id: 'client_company'},
+                {label: '快递单号', id: 'tracking_number'},
+                {label: '样本种属', id: 'species'},
+                {label: '样本类型', id: 'sample_type'},
+                {label: '样本总数', id: 'sample_count', suffix: '个'},
+                {label: '检测指标', id: 'index_name'},
+                {label: '实验目的', id: 'exp_purpose'}
+            ];
+            
+            fields.forEach(field => {
+                const element = document.getElementById(field.id);
+                const value = element ? element.value : '';
+                if (value || field.id === 'tracking_number') { // 快递单号可能还没填
+                    html += `<div class="preview-row">
+                        <div class="preview-label">${field.label}:</div>
+                        <div class="preview-value">${value || '(暂未填写)'}${field.suffix || ''}</div>
+                    </div>`;
+                }
+            });
+            
+            const groupInfo = document.getElementById('sample_group_info').value;
+            if (groupInfo) {
+                html += `<div class="preview-row">
+                    <div class="preview-label">分组说明:</div>
+                    <div class="preview-value" style="white-space: pre-line;">${groupInfo}</div>
+                </div>`;
+            }
+            
+            html += `</div>`;
+            
+            // 2. 样本详细信息
+            html += `<div class="preview-section">
+                <h3>二、样本详细信息</h3>`;
+            
+            const sampleRows = document.querySelectorAll('#dynamicSampleTable tr');
+            const validSamples = [];
+            
+            sampleRows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const sampleId = inputs[1]?.value.trim();
+                if (sampleId) {
+                    validSamples.push({
+                        type: inputs[0]?.value || '',
+                        id: sampleId,
+                        group: inputs[2]?.value || '',
+                        volume: inputs[3]?.value || '',
+                        temp: inputs[4]?.value || '',
+                        date: inputs[5]?.value || '',
+                        note: inputs[6]?.value || ''
+                    });
+                }
+            });
+            
+            if (validSamples.length > 0) {
+                html += `<p>共 ${validSamples.length} 个样本:</p>
+                <table class="preview-sample-table">
+                    <thead>
+                        <tr>
+                            <th>序号</th><th>样本编号</th><th>样本分组</th><th>样本类型</th><th>样本量</th><th>保存温度</th><th>收集日期</th><th>备注</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                
+                validSamples.forEach((sample, index) => {
+                    html += `<tr>
+                        <td>${index + 1}</td>
+                        <td><strong>${sample.id}</strong></td>
+                        <td>${sample.group}</td>
+                        <td>${sample.type}</td>
+                        <td>${sample.volume}</td>
+                        <td>${sample.temp}${sample.temp ? '℃' : ''}</td>
+                        <td>${sample.date}</td>
+                        <td>${sample.note}</td>
+                    </tr>`;
+                });
+                
+                html += `</tbody></table>`;
+            } else {
+                html += `<p style="color:#e74c3c; text-align:center;">⚠️ 尚未填写样本信息</p>`;
+            }
+            
+            html += `</div>`;
+            
+            // 3. 重要提醒
+            html += `<div class="preview-section">
+                <h3>三、重要提醒</h3>
+                <div style="background-color:#fff5f5; padding:15px; border-radius:5px;">
+                    <p><strong>请确认以下事项：</strong></p>
+                    <ul style="margin:10px 0;">
+                        <li>样本编号与EP管标签是否完全一致</li>
+                        <li>是否已备份所有样本（剩余样本不寄回）</li>
+                        <li>是否已准备好干冰+冰袋+泡沫箱包装</li>
+                        <li>是否已获取顺丰快递单号</li>
+                    </ul>
+                </div>
+            </div>`;
+            
+            container.innerHTML = html;
+        }
+        
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化样本表格
+            generateInitialSampleRows();
+            
+            // 为必填字段添加验证样式
+            const requiredInputs = document.querySelectorAll('input[required]');
+            requiredInputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    if (!this.value.trim()) {
+                        this.style.borderColor = '#e74c3c';
+                    } else {
+                        this.style.borderColor = '#2ecc71';
+                    }
+                });
+            });
+            
+            // 检查是否有已保存的数据
+            setTimeout(() => {
+                if (localStorage.getItem('elisaFormData')) {
+                    document.getElementById('saveStatus').innerHTML = `
+                        <span style="color:#3498db;">
+                            💡 检测到您有已保存的进度。如需加载，请点击上方的"加载已存进度"按钮。
+                        </span>`;
+                }
+            }, 1000);
+        });
+    </script>
+
+</body>
+</html>
