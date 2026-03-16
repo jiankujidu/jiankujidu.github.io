@@ -10,9 +10,10 @@
 @media(prefers-color-scheme:dark){:root{--bg:#0f172a;--card:#1e293b;--text:#f1f5f9;--muted:#94a3b8;--border:#334155;--accent:#3b82f6;--hover:#60a5fa;--shadow:0 8px 30px rgba(0,0,0,.2)}}
 body{background:var(--bg);color:var(--text);padding:20px;max-width:1000px;margin:0 auto}
 header{text-align:center;margin:40px 0}header h1{font-size:30px;font-weight:700;margin-bottom:8px}header p{color:var(--muted)}
-.bar{display:flex;gap:12px;margin-bottom:24px}
+.bar{display:flex;gap:12px;margin-bottom:24px; flex-wrap: wrap;}
 .btn{padding:10px 16px;border-radius:12px;border:none;background:var(--accent);color:#fff;cursor:pointer}
 .btn.gray{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.btn.excel{background:#10b981; color:#fff;}
 .editor{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:30px}
 .editor input{width:100%;margin-bottom:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg)}
 .sect{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
@@ -38,6 +39,10 @@ header{text-align:center;margin:40px 0}header h1{font-size:30px;font-weight:700;
 
 <div class="bar">
 <button class="btn" onclick="saveHtml()">💾 保存生成 index.html</button>
+<!-- 新增：导入导出Excel按钮 -->
+<button class="btn excel" onclick="exportToExcel()">📤 导出Excel</button>
+<button class="btn gray" onclick="document.getElementById('fileInput').click()">📥 导入Excel</button>
+<input type="file" id="fileInput" accept=".csv, .txt" style="display:none" onchange="importFromExcel(event)">
 <button class="btn gray" onclick="addSect()">➕ 添加分类</button>
 </div>
 
@@ -121,7 +126,179 @@ function delSect(i){data.splice(i,1);render()}
 function addLink(i){data[i].links.push({name:"名称",url:"https://",pwd:""});render()}
 function delLink(i,j){data[i].links.splice(j,1);render()}
 
-// 5. 原saveHtml函数：错误提示改为「密码错误，请联系陈美龙」
+// 5. 【新增】: 导出为Excel(CSV)功能
+function exportToExcel() {
+  // 构建CSV内容，包含表头
+  let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+  csvContent += "分类名称,分类密码,链接名称,链接URL,链接密码\n";
+
+  data.forEach(section => {
+    if (section.links.length > 0) {
+      section.links.forEach(link => {
+        // 对字段中的逗号和引号进行转义处理
+        const escapeField = (field) => {
+          if (field == null) field = '';
+          if (typeof field !== 'string') field = String(field);
+          if (field.includes(',') || field.includes('"') || field.includes('\n')) {
+            return '"' + field.replace(/"/g, '""') + '"';
+          }
+          return field;
+        };
+        const row = [
+          escapeField(section.name),
+          escapeField(section.pwd),
+          escapeField(link.name),
+          escapeField(link.url),
+          escapeField(link.pwd)
+        ];
+        csvContent += row.join(',') + '\n';
+      });
+    } else {
+      // 如果分类下无链接，也导出一行，链接信息留空
+      const row = [
+        escapeField(section.name),
+        escapeField(section.pwd),
+        '',
+        '',
+        ''
+      ];
+      csvContent += row.join(',') + '\n';
+    }
+  });
+
+  // 创建下载链接
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", "我的导航数据.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  alert("数据已导出为CSV文件，您可以用Excel打开它。");
+}
+
+// 6. 【新增】: 从Excel(CSV)导入功能
+function importFromExcel(event) {
+  const file = event.target.files[0];
+  if (!file) {
+    alert("未选择文件");
+    return;
+  }
+  if (!file.name.endsWith('.csv') && !file.name.endsWith('.txt')) {
+    alert("请选择CSV或TXT格式的文件。");
+    // 清空文件选择，允许重新选择同一文件
+    document.getElementById('fileInput').value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const text = e.target.result;
+      // 解析CSV内容
+      const lines = text.split('\n').filter(line => line.trim() !== '');
+      if (lines.length < 2) { // 至少表头+一行数据
+        alert("文件为空或格式不正确。");
+        document.getElementById('fileInput').value = '';
+        return;
+      }
+
+      const newData = [];
+      const sectionMap = new Map(); // 用于按分类名称分组链接
+
+      // 跳过表头，从第1行（索引1）开始解析数据
+      for (let i = 1; i < lines.length; i++) {
+        let line = lines[i];
+        const result = [];
+        let inQuotes = false;
+        let currentField = '';
+
+        for (let j = 0; j < line.length; j++) {
+          const char = line[j];
+          const nextChar = line[j + 1];
+
+          if (char === '"' && inQuotes && nextChar === '"') {
+            // 遇到转义的双引号 ""
+            currentField += '"';
+            j++; // 跳过下一个字符
+          } else if (char === '"') {
+            // 遇到非转义的双引号，切换状态
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            // 遇到逗号且不在引号内，结束当前字段
+            result.push(currentField);
+            currentField = '';
+          } else {
+            currentField += char;
+          }
+        }
+        result.push(currentField); // 添加最后一个字段
+
+        // 确保有5列，不足则用空字符串填充
+        while (result.length < 5) result.push('');
+        const [sectionName, sectionPwd, linkName, linkUrl, linkPwd] = result;
+
+        // 如果分类名为空，跳过此行
+        if (!sectionName.trim()) continue;
+
+        // 处理分类分组
+        if (!sectionMap.has(sectionName)) {
+          // 新分类
+          sectionMap.set(sectionName, {
+            name: sectionName,
+            pwd: sectionPwd,
+            links: []
+          });
+        }
+
+        const section = sectionMap.get(sectionName);
+        // 如果链接名称不为空，则添加链接
+        if (linkName.trim()) {
+          section.links.push({
+            name: linkName,
+            url: linkUrl,
+            pwd: linkPwd
+          });
+        }
+        // 如果分类密码在后续行有值，且当前值为空，则不覆盖（保持第一个非空值）
+        if (section.pwd === '' && sectionPwd !== '') {
+          section.pwd = sectionPwd;
+        }
+      }
+
+      // 将Map转换为数组
+      sectionMap.forEach(value => {
+        newData.push(value);
+      });
+
+      if (newData.length === 0) {
+        alert("未从文件中解析出有效数据。请确保CSV格式正确。");
+        document.getElementById('fileInput').value = '';
+        return;
+      }
+
+      // 确认是否覆盖现有数据
+      if (confirm(`即将导入 ${newData.length} 个分类，共 ${newData.reduce((sum, sect) => sum + sect.links.length, 0)} 个链接。\n这将替换当前所有数据，是否继续？`)) {
+        data = newData;
+        render();
+        alert("数据导入成功！");
+      }
+    } catch (error) {
+      console.error("导入失败:", error);
+      alert("文件解析失败，请确保CSV格式正确。\n建议先导出一次CSV，参考其格式进行修改。");
+    } finally {
+      // 清空文件选择，允许重新选择同一文件
+      document.getElementById('fileInput').value = '';
+    }
+  };
+  reader.onerror = function() {
+    alert("读取文件时发生错误。");
+    document.getElementById('fileInput').value = '';
+  };
+  reader.readAsText(file, 'UTF-8'); // 指定UTF-8编码读取
+}
+
+// 7. 原saveHtml函数：错误提示改为「密码错误，请联系陈美龙」
 function saveHtml(){
   // 拼接搜索框+2个密码弹窗（分类验证+链接验证）+ 核心脚本
   let t = '<div class="search"><input type="text" placeholder="搜索站点…" id="search"></div>';
