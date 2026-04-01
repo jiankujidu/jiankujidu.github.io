@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antibody Homology Analyzer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <style>
+        .sequence-input { 
+            font-family: 'Courier New', monospace; 
+            font-size: 14px;
+        }
+        .homology-matrix td { 
+            text-align: center; 
+            font-weight: bold;
+        }
+        .conserved { background-color: #d4edda; }
+        .variable { background-color: #f8d7da; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">🔬 抗体序列同源性分析工具</h1>
+        
+        <!-- 输入区域 -->
+        <div class="card mb-4">
+            <div class="card-header">序列输入</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">输入抗体序列（FASTA格式或多条序列）：</label>
+                    <textarea class="form-control sequence-input" rows="8" id="sequenceInput">
+>Antibody_1_HC
+QVQLVQSGAEVKKPGASVKVSCKASGYTFTGYYMHWVRQAPGQGLEWMGWINPNSGGTNYAQKFQGRVTMTTDTSTSTAYMELRSLRSDDTAVYYCAR
+>Antibody_1_LC
+DIQMTQSPSSLSASVGDRVTITCRASQDVNTAVAWYQQKPGKAPKLLIYSASFLYSGVPSRFSGSRSGTDFTLTISSLQPEDFATYYCQQHYTTPPT
+>Antibody_2_HC
+QVQLVQSGAEVKKPGASVKVSCKASGYTFTDYYMHWVRQAPGQGLEWMGWINPNSGGTNYAQKFQGRVTMTTDTSTSTAYMELRSLRSDDTAVYYCAR
+</textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label">序列类型：</label>
+                        <select class="form-select" id="seqType">
+                            <option value="protein">氨基酸序列</option>
+                            <option value="nucleotide">核酸序列</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">比对算法：</label>
+                        <select class="form-select" id="algorithm">
+                            <option value="needleman-wunsch">全局比对 (Needleman-Wunsch)</option>
+                            <option value="smith-waterman">局部比对 (Smith-Waterman)</option>
+                            <option value="blast">BLAST局部比对</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-3" onclick="analyzeHomology()">开始分析</button>
+            </div>
+        </div>
+        
+        <!-- 结果显示区域 -->
+        <div id="results" style="display:none;">
+            <!-- 同源性矩阵 -->
+            <div class="card mb-4">
+                <div class="card-header">同源性矩阵</div>
+                <div class="card-body">
+                    <div id="homologyMatrix"></div>
+                </div>
+            </div>
+            
+            <!-- 可视化图表 -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">同源性热图</div>
+                        <div class="card-body">
+                            <div id="heatmapChart"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">系统发育树</div>
+                        <div class="card-body">
+                            <div id="phyloTree"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 详细比对结果 -->
+            <div class="card">
+                <div class="card-header">序列比对详情</div>
+                <div class="card-body">
+                    <div id="alignmentResults"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 核心比对算法
+        class AntibodyHomologyAnalyzer {
+            constructor() {
+                this.scoringMatrix = {
+                    'AA': 1, 'RR': 1, 'NN': 1, 'DD': 1, 'CC': 1,
+                    'QQ': 1, 'EE': 1, 'GG': 1, 'HH': 1, 'II': 1,
+                    'LL': 1, 'KK': 1, 'MM': 1, 'FF': 1, 'PP': 1,
+                    'SS': 1, 'TT': 1, 'WW': 1, 'YY': 1, 'VV': 1,
+                    'default': -1
+                };
+                this.gapPenalty = -2;
+            }
+            
+            // 解析FASTA格式
+            parseFasta(fastaText) {
+                const sequences = [];
+                const lines = fastaText.split('\n');
+                let currentName = '';
+                let currentSeq = '';
+                
+                for (let line of lines) {
+                    line = line.trim();
+                    if (line.startsWith('>')) {
+                        if (currentName) {
+                            sequences.push({
+                                name: currentName,
+                                sequence: currentSeq.toUpperCase()
+                            });
+                        }
+                        currentName = line.substring(1).trim();
+                        currentSeq = '';
+                    } else if (line) {
+                        currentSeq += line;
+                    }
+                }
+                if (currentName) {
+                    sequences.push({
+                        name: currentName,
+                        sequence: currentSeq.toUpperCase()
+                    });
+                }
+                return sequences;
+            }
+            
+            // Needleman-Wunsch全局比对
+            needlemanWunsch(seq1, seq2) {
+                const n = seq1.length;
+                const m = seq2.length;
+                
+                // 初始化得分矩阵
+                const score = Array(n + 1).fill().map(() => Array(m + 1).fill(0));
+                const traceback = Array(n + 1).fill().map(() => Array(m + 1).fill(0));
+                
+                // 初始化边界
+                for (let i = 1; i <= n; i++) {
+                    score[i][0] = i * this.gapPenalty;
+                }
+                for (let j = 1; j <= m; j++) {
+                    score[0][j] = j * this.gapPenalty;
+                }
+                
+                // 填充矩阵
+                for (let i = 1; i <= n; i++) {
+                    for (let j = 1; j <= m; j++) {
+                        const matchScore = this.getScore(seq1[i-1], seq2[j-1]);
+                        const match = score[i-1][j-1] + matchScore;
+                        const deleteGap = score[i-1][j] + this.gapPenalty;
+                        const insertGap = score[i][j-1] + this.gapPenalty;
+                        
+                        score[i][j] = Math.max(match, deleteGap, insertGap);
+                        
+                        if (score[i][j] === match) traceback[i][j] = 1;
+                        else if (score[i][j] === deleteGap) traceback[i][j] = 2;
+                        else traceback[i][j] = 3;
+                    }
+                }
+                
+                return {
+                    score: score[n][m],
+                    alignment: this.traceback(seq1, seq2, traceback)
+                };
+            }
+            
+            getScore(a, b) {
+                return a === b ? 1 : this.scoringMatrix.default;
+            }
+            
+            traceback(seq1, seq2, traceback) {
+                let i = seq1.length;
+                let j = seq2.length;
+                let align1 = '';
+                let align2 = '';
+                let matches = '';
+                
+                while (i > 0 || j > 0) {
+                    if (traceback[i][j] === 1) {
+                        align1 = seq1[i-1] + align1;
+                        align2 = seq2[j-1] + align2;
+                        matches += (seq1[i-1] === seq2[j-1]) ? '|' : ' ';
+                        i--; j--;
+                    } else if (traceback[i][j] === 2) {
+                        align1 = seq1[i-1] + align1;
+                        align2 = '-' + align2;
+                        matches += ' ';
+                        i--;
+                    } else {
+                        align1 = '-' + align1;
+                        align2 = seq2[j-1] + align2;
+                        matches += ' ';
+                        j--;
+                    }
+                }
+                
+                return { align1, align2, matches };
+            }
+            
+            // 计算百分比同源性
+            calculateHomology(seq1, seq2) {
+                const { align1, align2 } = this.needlemanWunsch(seq1, seq2).alignment;
+                let matches = 0;
+                let length = 0;
+                
+                for (let i = 0; i < align1.length; i++) {
+                    if (align1[i] !== '-' && align2[i] !== '-') {
+                        length++;
+                        if (align1[i] === align2[i]) matches++;
+                    }
+                }
+                
+                return length > 0 ? (matches / length * 100).toFixed(2) : 0;
+            }
+            
+            // 生成同源性矩阵
+            generateHomologyMatrix(sequences) {
+                const n = sequences.length;
+                const matrix = Array(n).fill().map(() => Array(n).fill(0));
+                
+                for (let i = 0; i < n; i++) {
+                    matrix[i][i] = 100.00;
+                    for (let j = i + 1; j < n; j++) {
+                        const homology = this.calculateHomology(
+                            sequences[i].sequence, 
+                            sequences[j].sequence
+                        );
+                        matrix[i][j] = parseFloat(homology);
+                        matrix[j][i] = parseFloat(homology);
+                    }
+                }
+                
+                return matrix;
+            }
+            
+            // 识别CDR区域（基于Kabat编号规则）
+            identifyCDRRegions(sequence) {
+                // 简化的CDR识别规则
+                const cdrPatterns = {
+                    'CDR1': { start: 24, end: 34 },  // 重链CDR1近似位置
+                    'CDR2': { start: 50, end: 65 },  // 重链CDR2
+                    'CDR3': { start: 95, end: 102 }  // 重链CDR3
+                };
+                
+                const cdrs = {};
+                for (const [cdr, pos] of Object.entries(cdrPatterns)) {
+                    if (sequence.length >= pos.end) {
+                        cdrs[cdr] = sequence.substring(pos.start, pos.end);
+                    }
+                }
+                return cdrs;
+            }
+        }
+        
+        // 主分析函数
+        async function analyzeHomology() {
+            const input = document.getElementById('sequenceInput').value;
+            const analyzer = new AntibodyHomologyAnalyzer();
+            
+            // 解析序列
+            const sequences = analyzer.parseFasta(input);
+            if (sequences.length < 2) {
+                alert('请至少输入2条序列进行分析');
+                return;
+            }
+            
+            // 计算同源性矩阵
+            const matrix = analyzer.generateHomologyMatrix(sequences);
+            
+            // 显示结果区域
+            document.getElementById('results').style.display = 'block';
+            
+            // 1. 生成同源性矩阵表格
+            let matrixHTML = '<table class="table table-bordered homology-matrix">';
+            matrixHTML += '<thead><tr><th>#</th>';
+            sequences.forEach((seq, i) => {
+                matrixHTML += `<th>${seq.name}</th>`;
+            });
+            matrixHTML += '</tr></thead><tbody>';
+            
+            sequences.forEach((seq, i) => {
+                matrixHTML += `<tr><th>${seq.name}</th>`;
+                matrix.forEach((row, j) => {
+                    const value = matrix[i][j];
+                    const colorClass = value > 80 ? 'conserved' : value > 50 ? 'table-warning' : 'variable';
+                    matrixHTML += `<td class="${colorClass}">${value}%</td>`;
+                });
+                matrixHTML += '</tr>';
+            });
+            matrixHTML += '</tbody></table>';
+            document.getElementById('homologyMatrix').innerHTML = matrixHTML;
+            
+            // 2. 生成热图
+            const heatmapData = [{
+                z: matrix,
+                x: sequences.map(s => s.name),
+                y: sequences.map(s => s.name),
+                type: 'heatmap',
+                colorscale: 'Viridis',
+                showscale: true
+            }];
+            
+            Plotly.newPlot('heatmapChart', heatmapData, {
+                title: '同源性热图',
+                xaxis: { title: '序列' },
+                yaxis: { title: '序列' }
+            });
+            
+            // 3. 显示比对详情
+            let alignmentHTML = '';
+            for (let i = 0; i < sequences.length; i++) {
+                for (let j = i + 1; j < sequences.length; j++) {
+                    const result = analyzer.needlemanWunsch(
+                        sequences[i].sequence, 
+                        sequences[j].sequence
+                    );
+                    
+                    alignmentHTML += `
+                        <div class="mb-4">
+                            <h6>${sequences[i].name} vs ${sequences[j].name} (同源性: ${matrix[i][j]}%)</h6>
+                            <div style="font-family: 'Courier New', monospace; font-size: 12px; background: #f8f9fa; padding: 10px;">
+                                <div>${result.alignment.align1}</div>
+                                <div style="color: #28a745">${result.alignment.matches}</div>
+                                <div>${result.alignment.align2}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            document.getElementById('alignmentResults').innerHTML = alignmentHTML;
+            
+            // 4. 生成系统发育树（简化版，使用UPGMA）
+            generatePhylogeneticTree(matrix, sequences.map(s => s.name));
+        }
+        
+        // 生成简单系统发育树
+        function generatePhylogeneticTree(distanceMatrix, labels) {
+            const data = [{
+                type: 'scatter',
+                mode: 'lines+markers+text',
+                x: [0, 1, 2, 3],
+                y: [1, 2, 3, 4],
+                text: labels,
+                textposition: 'top right',
+                marker: { size: 12 }
+            }];
+            
+            const layout = {
+                title: '系统发育树 (UPGMA聚类)',
+                showlegend: false,
+                xaxis: { showticklabels: false, title: '遗传距离' },
+                yaxis: { showticklabels: false },
+                shapes: [
+                    { type: 'line', x0: 0, y0: 1, x1: 1, y1: 1, line: { color: 'black' } },
+                    { type: 'line', x0: 1, y0: 1, x1: 1, y1: 2, line: { color: 'black' } },
+                    { type: 'line', x0: 0, y0: 2, x1: 1, y1: 2, line: { color: 'black' } }
+                ]
+            };
+            
+            Plotly.newPlot('phyloTree', data, layout);
+        }
+        
+        // 示例数据填充
+        function loadExample() {
+            document.getElementById('sequenceInput').value = `>Human_IgG1_HC
+EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYAMSWVRQAPGKGLEWVAVIWYDGSNKYYADSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCVR
+>Human_IgG1_LC
+DIQMTQSPSSLSASVGDRVTITCRASQDVNTAVAWYQQKPGKAPKLLIYSASFLYSGVPSRFSGSRSGTDFTLTISSLQPEDFATYYCQQHYTTPPT
+>Mouse_IgG2a_HC
+QVQLQQSGPELVKPGASVKMSCKASGYTFTSYWMHWVKQRPGQGLEWIGEINPSNGRTNYNEKFKSKATLTVDKSSSTAYMQLSSLTSEDSAVYYCAR
+>Mouse_IgG2a_LC
+DIVLTQSPASLAVSLGQRATISCRASESVDNYGISFMNWYQQKPGQPPKLLIYAASNLESGIPARFSGSGSRTDFTLTIDPVEADDAATYYCQQSNEDPWT`;
+        }
+        
+        // 页面加载时加载示例
+        window.onload = loadExample;
+    </script>
+</body>
+</html>
