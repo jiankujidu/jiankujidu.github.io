@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>WB抗体实验售后表 - 填写向导</title>
+<style>
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Microsoft YaHei","SimHei",sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}
+.header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:30px;text-align:center}
+.header h1{font-size:28px;margin-bottom:10px}
+.header p{opacity:.9;font-size:14px}
+.progress-bar{display:flex;background:#f5f5f5}
+.progress-step{flex:1;padding:15px 10px;text-align:center;font-size:13px;color:#999;border-bottom:3px solid transparent;transition:all .3s;cursor:pointer}
+.progress-step.active{color:#667eea;border-bottom-color:#667eea;background:#fff;font-weight:bold}
+.progress-step.completed{color:#4CAF50;border-bottom-color:#4CAF50}
+.content{padding:30px}
+.step-content{display:none}
+.step-content.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.form-group{margin-bottom:25px}
+.form-group label{display:block;margin-bottom:8px;font-weight:bold;color:#333;font-size:15px}
+.form-group label .required{color:#e74c3c;margin-right:4px}
+.form-group input,.form-group textarea{width:100%;padding:12px 15px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;transition:all .3s;font-family:inherit}
+.form-group input:focus,.form-group textarea:focus{outline:none;border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,.1)}
+.form-group textarea{resize:vertical;min-height:100px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.btn-group{display:flex;justify-content:space-between;margin-top:30px;padding-top:20px;border-top:1px solid #eee}
+.btn{padding:12px 30px;border:none;border-radius:8px;font-size:15px;cursor:pointer;transition:all .3s;font-family:inherit}
+.btn-prev{background:#f5f5f5;color:#666}
+.btn-prev:hover{background:#e0e0e0}
+.btn-next{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+.btn-next:hover{transform:translateY(-2px);box-shadow:0 5px 20px rgba(102,126,234,.4)}
+.btn-export{background:linear-gradient(135deg,#4CAF50 0%,#45a049 100%);color:#fff}
+.btn-export:hover{transform:translateY(-2px);box-shadow:0 5px 20px rgba(76,175,80,.4)}
+.info-box{background:#e3f2fd;border-left:4px solid #2196F3;padding:15px;margin-bottom:20px;border-radius:0 8px 8px 0}
+.info-box p{color:#1565C0;font-size:14px;line-height:1.6}
+.radio-group{display:flex;gap:20px;flex-wrap:wrap}
+.radio-item{display:flex;align-items:center;cursor:pointer}
+.radio-item input{margin-right:8px}
+.upload-area{border:2px dashed #c0c0c0;border-radius:10px;padding:30px;text-align:center;cursor:pointer;transition:all .3s;background:#fafafa;margin-top:12px}
+.upload-area:hover,.upload-area.dragover{border-color:#667eea;background:#f0f3ff}
+.upload-area .upload-icon{font-size:36px;margin-bottom:10px}
+.upload-area p{color:#888;font-size:14px}
+.upload-area p strong{color:#667eea}
+.image-preview-grid{display:flex;flex-wrap:wrap;gap:12px;margin-top:15px}
+.image-card{position:relative;width:140px;border-radius:10px;overflow:hidden;border:2px solid #e0e0e0;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.image-card img{width:100%;height:100px;object-fit:cover;display:block}
+.image-card .card-footer{padding:6px 8px;background:#f8f9fa}
+.image-card .card-footer .img-name{font-size:11px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.image-card .card-footer .ann-btn{display:block;margin-top:4px;background:#ff9800;color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;width:100%}
+.image-card .card-footer .ann-btn:hover{background:#f57c00}
+.image-card .has-badge{position:absolute;top:6px;left:6px;background:#e74c3c;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:bold}
+.image-card .remove-btn{position:absolute;top:4px;right:4px;background:rgba(231,76,60,.85);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:1000;display:none;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.annotate-modal{background:#fff;border-radius:12px;max-width:95vw;max-height:95vh;overflow:auto}
+.annotate-modal .modal-hdr{padding:12px 16px;background:#f5f5f5;display:flex;align-items:center;justify-content:space-between;border-radius:12px 12px 0 0}
+.annotate-modal .modal-hdr h3{font-size:15px;color:#333}
+.annotate-modal .close-btn{background:#e74c3c;color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.annotate-modal .modal-hint{padding:8px 16px;background:#fff3e0;color:#e65100;font-size:13px;border-bottom:1px solid #ffe0b2}
+.canvas-wrap{position:relative;display:inline-block;cursor:crosshair}
+.canvas-wrap canvas{display:block}
+.annotate-modal .modal-body{padding:16px}
+.annotate-modal .modal-ftr{padding:12px 16px;background:#f5f5f5;display:flex;justify-content:space-between;align-items:center;border-radius:0 0 12px 12px}
+.annotate-modal .modal-ftr .tip{font-size:12px;color:#888}
+.annotate-modal .modal-ftr .actions{display:flex;gap:10px}
+.annotate-modal .modal-ftr button{padding:8px 18px;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit}
+.btn-save-ann{background:#4CAF50;color:#fff}
+.btn-can-ann{background:#e0e0e0;color:#555}
+.ann-popup{position:fixed;z-index:1001;display:none;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.3);padding:10px;min-width:200px}
+.ann-popup.active{display:block}
+.ann-popup label{font-size:12px;color:#666;display:block;margin-bottom:4px}
+.ann-popup input{width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit}
+.ann-popup .pact{display:flex;gap:6px;margin-top:6px}
+.ann-popup .pact button{padding:4px 12px;border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:inherit}
+.ann-popup .pact .ok-btn{background:#4CAF50;color:#fff}
+.ann-popup .pact .del-btn{background:#e74c3c;color:#fff}
+.ann-popup .pact .can-btn{background:#e0e0e0;color:#555}
+.preview-section{background:#f8f9fa;border-radius:12px;padding:25px;margin-top:20px}
+.preview-section h3{color:#333;margin-bottom:15px;font-size:18px}
+.preview-item{display:flex;padding:10px 0;border-bottom:1px dashed #ddd}
+.preview-item:last-child{border-bottom:none}
+.preview-label{font-weight:bold;color:#667eea;min-width:160px}
+.preview-value{color:#333;flex:1}
+.preview-images{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.preview-images .piw{position:relative;display:inline-block}
+.preview-images img{max-width:200px;max-height:150px;border-radius:6px;border:1px solid #ddd}
+.preview-images .pbadge{position:absolute;top:4px;left:4px;background:#e74c3c;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:bold}
+@media(max-width:600px){.form-row{grid-template-columns:1fr}.progress-step{font-size:11px;padding:10px 5px}}
+
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>WB抗体实验售后表</h1>
+    <p>请详细填写以下内容，您填写的越详细，越有利于我们快速解决您的问题</p>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-step active" data-step="1">客户信息</div>
+    <div class="progress-step" data-step="2">产品信息</div>
+    <div class="progress-step" data-step="3">投诉原因</div>
+    <div class="progress-step" data-step="4">实验条件</div>
+    <div class="progress-step" data-step="5">预览导出</div>
+  </div>
+  <div class="content">
+
+    <div class="step-content active" id="step1">
+      <div class="info-box"><p>请填写您的联系方式，带 <strong>*</strong> 号的为必填项。</p></div>
+      <div class="form-row">
+        <div class="form-group"><label><span class="required">*</span>姓名</label><input type="text" id="customerName" placeholder="请输入您的姓名"></div>
+        <div class="form-group"><label><span class="required">*</span>联系电话</label><input type="tel" id="customerPhone" placeholder="请输入联系电话"></div>
+      </div>
+      <div class="btn-group"><div></div><button class="btn btn-next" onclick="nextStep()">下一步</button></div>
+    </div>
+
+    <div class="step-content" id="step2">
+      <div class="info-box"><p>请填写您购买的产品信息，包括产品名称和货号。</p></div>
+      <div class="form-row">
+        <div class="form-group"><label><span class="required">*</span>产品名称</label><input type="text" id="productName" placeholder="例如：BDNF mouse mAb"></div>
+        <div class="form-group"><label><span class="required">*</span>产品货号</label><input type="text" id="productCode" placeholder="例如：YP-mAb-12464"></div>
+      </div>
+      <div class="btn-group"><button class="btn btn-prev" onclick="prevStep()">上一步</button><button class="btn btn-next" onclick="nextStep()">下一步</button></div>
+    </div>
+
+    <div class="step-content" id="step3">
+      <div class="info-box"><p>请描述您遇到的问题，并上传相关实验图片。点击卡片上的<strong>标注问题点</strong>按钮可在图片上添加标记说明。</p></div>
+      <div class="form-group">
+        <label><span class="required">*</span>投诉原因</label>
+        <div class="radio-group" style="margin-bottom:15px">
+          <label class="radio-item"><input type="radio" name="proteinStatus" value="目的蛋白未显影" checked>目的蛋白未显影</label>
+          <label class="radio-item"><input type="radio" name="proteinStatus" value="目的蛋白显影弱">目的蛋白显影弱</label>
+          <label class="radio-item"><input type="radio" name="proteinStatus" value="非特异性条带">非特异性条带</label>
+          <label class="radio-item"><input type="radio" name="proteinStatus" value="其他">其他</label>
+        </div>
+        <input type="text" id="targetProtein" placeholder="目标蛋白名称（例如：BDNF条带）" style="margin-bottom:12px">
+        <div class="radio-group">
+          <label class="radio-item"><input type="radio" name="internalStatus" value="内参显影" checked>内参显影</label>
+          <label class="radio-item"><input type="radio" name="internalStatus" value="内参未显影">内参未显影</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>附带图片（点击「标注问题点」在图片上画标记）</label>
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-icon">🖼️</div>
+          <p><strong>点击选择图片</strong>，或将图片拖拽到此处</p>
+          <p style="margin-top:6px;font-size:12px">支持 JPG、PNG、GIF，单张不超过 10MB</p>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
+        <div class="image-preview-grid" id="imagePreviewGrid"></div>
+      </div>
+      <div class="btn-group"><button class="btn btn-prev" onclick="prevStep()">上一步</button><button class="btn btn-next" onclick="nextStep()">下一步</button></div>
+    </div>
+
+    <div class="step-content" id="step4">
+      <div class="info-box"><p>请详细填写您的实验条件，这些信息对分析问题非常重要。</p></div>
+      <div class="form-row">
+        <div class="form-group"><label><span class="required">*</span>样本（种属+样本类型）</label><input type="text" id="sampleType" placeholder="例如：小鼠+海马体蛋白"></div>
+        <div class="form-group"><label><span class="required">*</span>上样量</label><input type="text" id="sampleVolume" placeholder="例如：2-7ul"></div>
+      </div>
+      <div class="form-group"><label><span class="required">*</span>样本蛋白上样浓度（带BCA）</label><input type="text" id="proteinConcentration" placeholder="例如：10ug/ul（OD值为1.703）"></div>
+      <div class="form-group"><label><span class="required">*</span>一抗、二抗稀释比例和孵育条件</label><textarea id="antibodyConditions" placeholder="例如：一抗稀释比：1：1000，4℃摇床过夜；二抗稀释比：1：10000，室温摇床孵育1h"></textarea></div>
+      <div class="form-group"><label><span class="required">*</span>封闭时间</label><input type="text" id="blockingTime" placeholder="例如：快速封闭液封闭10min"></div>
+      <div class="form-group"><label>其他说明（实验方法、操作流程等）</label><textarea id="otherNotes" placeholder="请详细说明您实验所使用的方法及操作流程..."></textarea></div>
+      <div class="btn-group"><button class="btn btn-prev" onclick="prevStep()">上一步</button><button class="btn btn-next" onclick="nextStep()">下一步</button></div>
+    </div>
+
+    <div class="step-content" id="step5">
+      <div class="info-box"><p>请确认以下信息填写正确，确认无误后点击导出按钮生成文档。</p></div>
+      <div class="preview-section"><h3>填写内容预览</h3><div id="previewContent"></div></div>
+      <div class="btn-group"><button class="btn btn-prev" onclick="prevStep()">上一步</button><button class="btn btn-export" onclick="exportDocument()">导出 Word 文档</button></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 标注弹窗 -->
+<div class="modal-overlay" id="annotateModal">
+  <div class="annotate-modal">
+    <div class="modal-hdr">
+      <h3 id="modalTitle">标注图片问题点</h3>
+      <button class="close-btn" onclick="closeAnnotateModal()">x</button>
+    </div>
+    <div class="modal-hint">💡 点击图片添加编号标记（1、2、3...），点击标记可输入说明文字或删除</div>
+    <div class="modal-body">
+      <div class="canvas-wrap" id="canvasWrap"><canvas id="annotateCanvas"></canvas></div>
+    </div>
+    <div class="modal-ftr">
+      <span class="tip" id="annotateTip">已标注 0 个问题点</span>
+      <div class="actions">
+        <button class="btn-can-ann" onclick="closeAnnotateModal()">取消</button>
+        <button class="btn-save-ann" onclick="saveAnnotation()">保存标注</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 标注输入气泡 -->
+<div class="ann-popup" id="annotationPopup">
+  <label>问题点说明：</label>
+  <input type="text" id="annotationText" placeholder="请输入问题描述（如：目的条带缺失）...">
+  <div class="pact">
+    <button class="ok-btn" onclick="confirmAnnotation()">确定</button>
+    <button class="del-btn" onclick="deleteAnnotation()">删除</button>
+    <button class="can-btn" onclick="cancelAnnotation()">取消</button>
+  </div>
+</div>
+
+<script>
+var currentStep=1;
+var totalSteps=5;
+var uploadedImages=[];
+var currentAnnotateIdx=-1;
+var pendingPoint=null;
+var annotations=[];
+var editAnnotationIdx=-1;
+var imgNaturalW=0,imgNaturalH=0;
+var canvasDisplayW=0,canvasDisplayH=0;
+
+function handleFiles(files){
+  Array.from(files).forEach(function(file){
+    if(!file.type.startsWith("image/"))return;
+    if(file.size>10*1024*1024){alert(file.name+" 超过10MB，已跳过");return;}
+    var reader=new FileReader();
+    reader.onload=function(e){
+      uploadedImages.push({name:file.name,dataUrl:e.target.result,annotations:[],annotatedUrl:null});
+      renderImagePreviews();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderImagePreviews(){
+  var grid=document.getElementById("imagePreviewGrid");
+  grid.innerHTML="";
+  uploadedImages.forEach(function(img,idx){
+    var hasNotes=img.annotations&&img.annotations.length>0;
+    var card=document.createElement("div");
+    card.className="image-card";
+    var badge=hasNotes?'<div class="has-badge">'+img.annotations.length+'</div>':'';
+    var imgSrc=img.annotatedUrl||img.dataUrl;
+    card.innerHTML=badge+'<img src="'+imgSrc+'" alt="'+img.name+'">'+
+      '<div class="card-footer">'+
+        '<span class="img-name">'+img.name+'</span>'+
+        '<button class="ann-btn" onclick="openAnnotateModal('+idx+')">'+(hasNotes?'查看/编辑标注':'标注问题点')+'</button>'+
+      '</div>'+
+      '<button class="remove-btn" onclick="removeImage('+idx+')">x</button>';
+    grid.appendChild(card);
+  });
+}
+
+function removeImage(idx){uploadedImages.splice(idx,1);renderImagePreviews();}
+
+var uploadArea=document.getElementById("uploadArea");
+uploadArea.addEventListener("dragover",function(e){e.preventDefault();uploadArea.classList.add("dragover")});
+uploadArea.addEventListener("dragleave",function(){uploadArea.classList.remove("dragover")});
+uploadArea.addEventListener("drop",function(e){e.preventDefault();uploadArea.classList.remove("dragover");handleFiles(e.dataTransfer.files)});
+
+var canvas=document.getElementById("annotateCanvas");
+var ctx=canvas.getContext("2d");
+var modal=document.getElementById("annotateModal");
+var canvasWrap=document.getElementById("canvasWrap");
+var popup=document.getElementById("annotationPopup");
+var annotateText=document.getElementById("annotationText");
+var annotateTip=document.getElementById("annotateTip");
+
+function openAnnotateModal(idx){
+  currentAnnotateIdx=idx;
+  annotations=uploadedImages[idx].annotations?uploadedImages[idx].annotations.slice():[];
+  var img=new Image();
+  img.onload=function(){
+    imgNaturalW=img.naturalWidth;
+    imgNaturalH=img.naturalHeight;
+    var maxW=Math.min(window.innerWidth*0.85,800);
+    var maxH=Math.min(window.innerHeight*0.6,500);
+    var scale=Math.min(maxW/imgNaturalW,maxH/imgNaturalH,1);
+    canvasDisplayW=Math.round(imgNaturalW*scale);
+    canvasDisplayH=Math.round(imgNaturalH*scale);
+    canvas.width=canvasDisplayW;canvas.height=canvasDisplayH;
+    canvas.style.width=canvasDisplayW+"px";canvas.style.height=canvasDisplayH+"px";
+    canvasWrap.style.width=canvasDisplayW+"px";canvasWrap.style.height=canvasDisplayH+"px";
+    drawCanvas(img);
+    updateAnnotateTip();
+    document.getElementById("modalTitle").textContent="标注："+uploadedImages[idx].name;
+    modal.classList.add("active");
+  };
+  img.src=uploadedImages[idx].dataUrl;
+}
+
+function drawCanvas(img){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(img,0,0,canvasDisplayW,canvasDisplayH);
+  annotations.forEach(function(ann,i){
+    var rx=ann.x*canvasDisplayW,ry=ann.y*canvasDisplayH,r=14;
+    ctx.beginPath();ctx.arc(rx,ry,r,0,Math.PI*2);
+    ctx.fillStyle="rgba(220,53,69,0.9)";ctx.fill();
+    ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle="#fff";ctx.font="bold 11px Arial";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillText(String(i+1),rx,ry);
+    if(ann.text){
+      ctx.font="11px Microsoft YaHei";
+      var tw=ctx.measureText(ann.text).width+12,th=20,bx=rx+r+4,by=ry-th/2;
+      ctx.fillStyle="rgba(0,0,0,0.75)";roundRect(ctx,bx,by,tw,th,4);ctx.fill();
+      ctx.fillStyle="#fff";ctx.textAlign="left";ctx.textBaseline="middle";ctx.fillText(ann.text,bx+6,by+th/2);
+    }
+  });
+}
+
+function roundRect(c,x,y,w,h,r){
+  c.beginPath();
+  c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);
+  c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);
+  c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath();
+}
+
+function updateAnnotateTip(){annotateTip.textContent="已标注 "+annotations.length+" 个问题点";}
+
+canvas.addEventListener("click",function(e){
+  var rect=canvas.getBoundingClientRect();
+  var x=e.clientX-rect.left,y=e.clientY-rect.top;
+  var clickedIdx=-1;
+  for(var i=0;i<annotations.length;i++){
+    var rx=annotations[i].x*canvasDisplayW,ry=annotations[i].y*canvasDisplayH;
+    if(Math.hypot(x-rx,y-ry)<=14){clickedIdx=i;break;}
+  }
+  if(clickedIdx>=0){
+    editAnnotationIdx=clickedIdx;
+    showPopup(e.clientX,e.clientY,annotations[clickedIdx].text||"");
+  }else{
+    editAnnotationIdx=-1;
+    pendingPoint={x:x/canvasDisplayW,y:y/canvasDisplayH};
+    showPopup(e.clientX,e.clientY,"");
+  }
+});
+
+function showPopup(x,y,text){
+  annotateText.value=text||"";
+  popup.style.left=Math.min(x,window.innerWidth-220)+"px";
+  popup.style.top=Math.max(10,y-80)+"px";
+  popup.classList.add("active");
+  setTimeout(function(){annotateText.focus()},50);
+}
+
+function confirmAnnotation(){
+  var text=annotateText.value.trim();
+  if(editAnnotationIdx>=0){annotations[editAnnotationIdx].text=text;}
+  else if(pendingPoint){annotations.push({x:pendingPoint.x,y:pendingPoint.y,text:text});pendingPoint=null;}
+  popup.classList.remove("active");
+  var img=new Image();img.onload=function(){drawCanvas(img);updateAnnotateTip()};img.src=uploadedImages[currentAnnotateIdx].dataUrl;
+}
+
+function deleteAnnotation(){
+  if(editAnnotationIdx>=0){annotations.splice(editAnnotationIdx,1);editAnnotationIdx=-1;}
+  popup.classList.remove("active");
+  var img=new Image();img.onload=function(){drawCanvas(img);updateAnnotateTip()};img.src=uploadedImages[currentAnnotateIdx].dataUrl;
+}
+
+function cancelAnnotation(){pendingPoint=null;editAnnotationIdx=-1;popup.classList.remove("active")}
+
+function saveAnnotation(){
+  var img=new Image();
+  img.onload=function(){
+    var off=document.createElement("canvas");
+    off.width=imgNaturalW;off.height=imgNaturalH;
+    var offCtx=off.getContext("2d");
+    offCtx.drawImage(img,0,0);
+    annotations.forEach(function(ann,i){
+      var rx=ann.x*imgNaturalW,ry=ann.y*imgNaturalH,r=Math.max(20,imgNaturalW/40);
+      offCtx.beginPath();offCtx.arc(rx,ry,r,0,Math.PI*2);
+      offCtx.fillStyle="rgba(220,53,69,0.9)";offCtx.fill();
+      offCtx.strokeStyle="#fff";offCtx.lineWidth=Math.max(3,imgNaturalW/200);offCtx.stroke();
+      offCtx.fillStyle="#fff";offCtx.font="bold "+Math.max(14,imgNaturalW/50)+"px Arial";
+      offCtx.textAlign="center";offCtx.textBaseline="middle";offCtx.fillText(String(i+1),rx,ry);
+      if(ann.text){
+        var fs=Math.max(12,imgNaturalW/60);
+        offCtx.font=fs+"px Microsoft YaHei";
+        var tw=offCtx.measureText(ann.text).width+16,th=fs+10,bx=rx+r+6,by=ry-th/2;
+        offCtx.fillStyle="rgba(0,0,0,0.75)";roundRect(offCtx,bx,by,tw,th,4);offCtx.fill();
+        offCtx.fillStyle="#fff";offCtx.textAlign="left";offCtx.textBaseline="middle";offCtx.fillText(ann.text,bx+8,by+th/2);
+      }
+    });
+    uploadedImages[currentAnnotateIdx].annotations=annotations.slice();
+    uploadedImages[currentAnnotateIdx].annotatedUrl=off.toDataURL("image/png");
+    closeAnnotateModal();
+    renderImagePreviews();
+  };
+  img.src=uploadedImages[currentAnnotateIdx].dataUrl;
+}
+
+function closeAnnotateModal(){modal.classList.remove("active");popup.classList.remove("active");pendingPoint=null;editAnnotationIdx=-1;currentAnnotateIdx=-1}
+modal.addEventListener("click",function(e){if(e.target===modal)closeAnnotateModal()});
+
+function showStep(step){
+  document.querySelectorAll(".step-content").forEach(function(el){el.classList.remove("active")});
+  document.getElementById("step"+step).classList.add("active");
+  document.querySelectorAll(".progress-step").forEach(function(el,i){
+    el.classList.remove("active","completed");
+    if(i+1<step)el.classList.add("completed");
+    else if(i+1===step)el.classList.add("active");
+  });
+  if(step===5)updatePreview();
+}
+
+function nextStep(){if(validateStep(currentStep)&&currentStep<totalSteps){currentStep++;showStep(currentStep)}}
+function prevStep(){if(currentStep>1){currentStep--;showStep(currentStep)}}
+
+function validateStep(step){
+  var req={1:["customerName","customerPhone"],2:["productName","productCode"],3:["targetProtein"],4:["sampleType","sampleVolume","proteinConcentration","antibodyConditions","blockingTime"]};
+  var valid=true;
+  (req[step]||[]).forEach(function(id){
+    var f=document.getElementById(id);
+    if(!f.value.trim()){f.style.borderColor="#e74c3c";valid=false;}
+    else f.style.borderColor="#e0e0e0";
+  });
+  if(!valid)alert("请填写所有必填项");
+  return valid;
+}
+
+function collectFormData(){
+  return{
+    customerName:document.getElementById("customerName").value,
+    customerPhone:document.getElementById("customerPhone").value,
+    productName:document.getElementById("productName").value,
+    productCode:document.getElementById("productCode").value,
+    proteinStatus:(document.querySelector("input[name=proteinStatus]:checked")||{}).value||"",
+    targetProtein:document.getElementById("targetProtein").value,
+    internalStatus:(document.querySelector("input[name=internalStatus]:checked")||{}).value||"",
+    sampleType:document.getElementById("sampleType").value,
+    sampleVolume:document.getElementById("sampleVolume").value,
+    proteinConcentration:document.getElementById("proteinConcentration").value,
+    antibodyConditions:document.getElementById("antibodyConditions").value,
+    blockingTime:document.getElementById("blockingTime").value,
+    otherNotes:document.getElementById("otherNotes").value
+  };
+}
+
+function updatePreview(){
+  var d=collectFormData();
+  var imgHtml="";
+  if(uploadedImages.length>0){
+    imgHtml='<div class="preview-images">'+
+      uploadedImages.map(function(img,idx){
+        var badge=img.annotations&&img.annotations.length>0?'<div class="pbadge">'+img.annotations.length+'</div>':'';
+        return'<div class="piw">'+badge+'<img src="'+(img.annotatedUrl||img.dataUrl)+'" alt="'+img.name+'"></div>';
+      }).join('')+'</div>';
+  }
+  var annoDetails="";
+  var hasAnno=uploadedImages.some(function(img){return img.annotations&&img.annotations.length>0});
+  if(hasAnno){
+    annoDetails='<div style="margin-top:10px;background:#fff3e0;border-radius:8px;padding:12px">'+
+      uploadedImages.map(function(img){
+        if(!img.annotations||img.annotations.length===0)return"";
+        return'<p style="font-size:13px;color:#555;margin:4px 0">'+
+          '<strong>'+img.name+':</strong> '+
+          img.annotations.map(function(a,i){return'<span style="color:#e74c3c;font-weight:bold">['+(i+1)+']</span> '+a.text}).join(" | ")+
+          '</p>';
+      }).join('')+'</div>';
+  }
+  document.getElementById("previewContent").innerHTML=
+    '<div class="preview-item"><span class="preview-label">姓名：</span><span class="preview-value">'+(d.customerName||"-")+'</span></div>'+
+    '<div class="preview-item"><span class="preview-label">联系电话：</span><span class="preview-value">'+(d.customerPhone||"-")+'</span></div>'+
+    '<div class="preview-item"><span class="preview-label">产品名称：</span><span class="preview-value">'+(d.productName||"-")+'</span></div>'+
+    '<div class="preview-item"><span class="preview-label">产品货号：</span><span class="preview-value">'+(d.productCode||"-")+'</span></div>'+
+    '<div class="preview-item"><span class="preview-label">投诉原因：</span><span class="preview-value">'+d.proteinStatus+'（'+d.targetProtein+'）- '+d.internalStatus+'</span></div>'+
+    '<div class="preview-item"><span class="preview-label">附带图片：</span><span class="preview-value">'+(uploadedImages.length>0?uploadedImages.length+" 张"+imgHtml+annoDetails:"无")+'</span></div>'+
+    '<div class="preview-item"><span class="preview-label">样本类型：</span><span class="preview-value">'+(d.sampleType||"-")+'</span></div>'+
+    '<div class="preview-item"><span class="preview-label">上样量：</span><span class="preview-value">'+(d.sampleVolume||"-")+'</span></div>'+
+    '<div class="preview-item"><span class="preview-label">蛋白浓度：</span><span class="preview-value">'+(d.proteinConcentration||"-")+'</span></div>'+
+    '<div class="preview-item"><span class="preview-label">抗体条件：</span><span class="preview-value">'+(d.antibodyConditions||"-")+'</span></div>'+
+    '<div class="preview-item"><span class="preview-label">封闭时间：</span><span class="preview-value">'+(d.blockingTime||"-")+'</span></div>'+
+    (d.otherNotes?'<div class="preview-item"><span class="preview-label">其他说明：</span><span class="preview-value">'+d.otherNotes+'</span></div>':"");
+}
+
+function exportDocument(){
+  var d=collectFormData();
+  var imagesHtml="";
+  if(uploadedImages.length>0){
+    imagesHtml=uploadedImages.map(function(img){
+      return'<img src="'+(img.annotatedUrl||img.dataUrl)+'" style="max-width:320px;max-height:240px;margin:6pt 6pt 6pt 0;border:1px solid #ccc" alt="'+img.name+'">';
+    }).join("");
+  }
+  var annoDetailTable="";
+  var hasAnno=uploadedImages.some(function(img){return img.annotations&&img.annotations.length>0});
+  if(hasAnno){
+    annoDetailTable='<table style="width:100%;border-collapse:collapse;margin-top:6pt">'+
+      '<tr><td style="border:1px solid #000;padding:6pt 8pt;font-size:10.5pt;font-weight:bold;background:#f0f0f0;width:28%">图片标注说明：</td>'+
+      '<td style="border:1px solid #000;padding:6pt 8pt;font-size:10.5pt">'+
+      uploadedImages.map(function(img){
+        if(!img.annotations||img.annotations.length===0)return"";
+        return'<b>'+img.name+':</b> '+img.annotations.map(function(a,i){return'<span style="color:#c0392b">['+(i+1)+']</span> '+a.text}).join(" &nbsp; ")+"<br>";
+      }).join("")+'</td></tr></table>';
+  }
+  var docContent='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'+
+    '<head><meta charset="utf-8"><title>WB抗体实验售后表</title>'+
+    '<style>body{font-family:SimSun,宋体,serif;font-size:12pt;margin:2cm}h1{font-size:16pt;font-weight:bold;text-align:center;margin-bottom:12pt}'+
+    'p{font-size:10.5pt;line-height:1.6;margin-bottom:6pt}.section{font-size:12pt;font-weight:bold;margin:12pt 0 6pt}'+
+    'table{width:100%;border-collapse:collapse;margin-bottom:10pt}td{border:1px solid #000;padding:6pt 8pt;font-size:10.5pt;vertical-align:top}'+
+    '.lbl{font-weight:bold;background:#f0f0f0;width:28%}.footer-note{font-size:10pt;margin-top:12pt;line-height:1.6}</style></head><body>'+
+    '<h1>原料售后表（*为必填项）</h1>'+
+    '<p><strong>尊敬的客户：</strong><br>为了提供更优质的产品和服务，请详细填写以下内容。您填写的越详细，越有利于我们快速的解决您的问题。谢谢您的配合！我们的技术支持团队会根据您提供的信息分析问题所在，并在第一时间给出解决方案！</p>'+
+    '<div class="section">客户相关信息</div>'+
+    '<table><tr><td class="lbl">*姓名：</td><td>'+d.customerName+'</td><td class="lbl">*联系电话：</td><td>'+d.customerPhone+'</td></tr>'+
+    '<tr><td class="lbl">*产品名称：</td><td>'+d.productName+'</td><td class="lbl">*产品货号：</td><td>'+d.productCode+'</td></tr></table>'+
+    '<div class="section">*投诉原因简要（附带图片）</div>'+
+    '<table><tr><td colspan="2">'+d.proteinStatus+'（'+d.targetProtein+'）<br>'+d.internalStatus+(imagesHtml?"<br>"+imagesHtml:"")+'</td></tr></table>'+
+    annoDetailTable+
+    '<table>'+
+    '<tr><td class="lbl">*样本（种属+样本类型）：</td><td>'+d.sampleType+'</td></tr>'+
+    '<tr><td class="lbl">*上样量：</td><td>'+d.sampleVolume+'</td></tr>'+
+    '<tr><td class="lbl">*样本蛋白上样浓度（带BCA）：</td><td>'+d.proteinConcentration+'</td></tr>'+
+    '<tr><td class="lbl">*一抗、二抗稀释比例和孵育条件：</td><td>'+d.antibodyConditions+'</td></tr>'+
+    '<tr><td class="lbl">*封闭时间：</td><td>'+d.blockingTime+'</td></tr>'+
+    (d.otherNotes?'<tr><td class="lbl">其他说明：</td><td>'+d.otherNotes+'</td></tr>':"")+
+    '</table>'+
+    '<p class="footer-note">请详细说明您实验所使用的方法及操作流程，附件中请列出能够说明产品问题的实验结果（测序峰图、数据、WB图片等）。请您务必将实验结果标注清楚，因为这有助于我们更准确分析产品出现问题的原因，并提出合理的解决方案。技术支持团队收到您投诉邮件后，会在1个工作日内与您取得联系。</p>'+
+    '</body></html>';
+  var blob=new Blob(["﻿"+docContent],{type:"application/msword;charset=utf-8"});
+  var link=document.createElement("a");
+  link.href=URL.createObjectURL(blob);
+  link.download="WB抗体实验售后表_"+d.customerName+"_"+new Date().toISOString().slice(0,10)+".doc";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(function(){URL.revokeObjectURL(link.href)},1000);
+  alert("文档已导出！");
+}
+
+document.querySelectorAll(".progress-step").forEach(function(el,i){
+  el.addEventListener("click",function(){
+    var t=i+1;
+    if(t<currentStep||validateStep(currentStep)){currentStep=t;showStep(currentStep)}
+  });
+});
+
+document.querySelectorAll("input,textarea").forEach(function(f){
+  f.addEventListener("focus",function(){f.style.borderColor="#667eea"});
+  f.addEventListener("blur",function(){f.style.borderColor="#e0e0e0"});
+});
+</script>
+</body>
+</html>
