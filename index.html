@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>病理技术服务报价系统</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:#f5f5f5;color:#333}
+.header{background:linear-gradient(135deg,#1a73e8,#4285f4);color:#fff;padding:16px 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.header h1{font-size:20px;font-weight:600}
+.header-sub{font-size:12px;opacity:.85;margin-top:2px}
+.search-wrap{max-width:600px;margin:12px auto 0;position:relative}
+.search-wrap input{width:100%;padding:10px 36px 10px 14px;border:none;border-radius:20px;font-size:14px;outline:none;background:rgba(255,255,255,.95);color:#333;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.search-wrap .search-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;color:#999}
+.filter-bar{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;background:#fff;border-bottom:1px solid #eee;overflow-x:auto;-webkit-overflow-scrolling:touch;position:sticky;top:56px;z-index:99}
+.filter-chip{padding:6px 14px;border-radius:16px;font-size:13px;cursor:pointer;border:1px solid #ddd;background:#fff;color:#555;white-space:nowrap;transition:all .2s;user-select:none}
+.filter-chip:hover{border-color:#1a73e8;color:#1a73e8}
+.filter-chip.active{background:#1a73e8;color:#fff;border-color:#1a73e8}
+.action-bar{display:flex;gap:8px;padding:8px 16px;background:#fff;border-bottom:1px solid #eee;align-items:center;flex-wrap:wrap}
+.action-btn{padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid #ddd;background:#fff;color:#555;transition:all .2s}
+.action-btn:hover{background:#f0f0f0}
+.cart-badge{background:#e53935;color:#fff;border-radius:10px;padding:2px 8px;font-size:11px;margin-left:4px;min-width:18px;text-align:center;display:inline-block}
+.main-layout{display:flex;min-height:calc(100vh - 56px)}
+.content-area{flex:1;padding:16px;padding-bottom:100px}
+.items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.item-card{background:#fff;border-radius:10px;padding:14px;cursor:pointer;border:2px solid transparent;transition:all .2s;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.item-card:hover{border-color:#1a73e8;box-shadow:0 3px 10px rgba(26,115,232,.15);transform:translateY(-1px)}
+.item-card .cat-tag{font-size:11px;color:#1a73e8;background:#e8f0fe;padding:2px 8px;border-radius:4px;display:inline-block;margin-bottom:6px}
+.item-card .name{font-size:14px;font-weight:500;margin-bottom:4px;line-height:1.3}
+.item-card .price{font-size:16px;font-weight:700;color:#e53935}
+.item-card .price .unit{font-size:12px;font-weight:400;color:#999}
+.item-card{position:relative}.item-card .warn{position:absolute;top:8px;right:8px;background:#ffebee;color:#e53935;font-size:12px;padding:2px 6px;border-radius:4px}.fav-star{background:none;border:none;font-size:16px;cursor:pointer;color:#ccc;padding:2px 6px;line-height:1}.fav-star:hover{color:#e53935}.fav-star.active{color:#f5c518}
+.item-count{font-size:12px;color:#999;margin-top:4px}
+.item-count b{color:#1a73e8}
+.cart-sidebar{width:380px;background:#fff;border-left:1px solid #eee;height:100vh;position:sticky;top:0;overflow-y:auto;box-shadow:-2px 0 8px rgba(0,0,0,.05);flex-shrink:0}
+.cart-sidebar h2{font-size:16px;padding:16px;border-bottom:1px solid #eee;position:sticky;top:0;background:#fff;z-index:1}
+.cart-sidebar .cart-body{padding:12px 16px}
+.cart-item{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #f5f5f5;gap:8px}
+.cart-item .ci-info{flex:1;min-width:0}
+.cart-item .ci-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cart-item .ci-price{font-size:13px;color:#e53935}
+.cart-item .ci-qty{display:flex;align-items:center;gap:6px}
+.cart-item .ci-qty button{width:26px;height:26px;border-radius:50%;border:1px solid #ddd;background:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.cart-item .ci-qty button:hover{background:#f0f0f0}
+.cart-item .ci-qty span{min-width:24px;text-align:center;font-size:13px}
+.cart-item .ci-del{color:#999;cursor:pointer;font-size:18px;padding:4px}
+.cart-item .ci-del:hover{color:#e53935}
+.cart-total{padding:16px;border-top:2px solid #1a73e8;background:#f8fbff;position:sticky;bottom:0}
+.cart-total .total-row{display:flex;justify-content:space-between;font-size:18px;font-weight:700;margin-bottom:12px}
+.cart-total .total-row .label{color:#555}
+.cart-total .total-row .val{color:#e53935}
+.cart-actions{display:flex;gap:8px;flex-wrap:wrap}
+.cart-actions button{flex:1;min-width:100px;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer;border:none;font-weight:500;transition:all .2s}
+.btn-clear{background:#fff;color:#e53935;border:1px solid #e53935!important}
+.btn-clear:hover{background:#ffebee}
+.btn-excel{background:#217346;color:#fff}
+.btn-excel:hover{background:#1a5c38}
+.btn-word{background:#2b5797;color:#fff}
+.btn-word:hover{background:#1e3f6f}
+.btn-txt{background:#4472C4;color:#fff}
+.btn-txt:hover{background:#355b9e}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.show{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:12px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+.modal h3{padding:16px;border-bottom:1px solid #eee;font-size:16px}
+.modal .modal-body{padding:16px;font-size:14px;line-height:1.6}
+.modal .modal-footer{padding:12px 16px;border-top:1px solid #eee;display:flex;gap:8px;justify-content:flex-end}
+.modal .modal-footer button{padding:8px 20px;border-radius:8px;border:none;cursor:pointer;font-size:14px}
+.btn-cancel{background:#f5f5f5;color:#555}
+.btn-cancel:hover{background:#e5e5e5}
+.btn-confirm{background:#1a73e8;color:#fff}
+.btn-confirm:hover{background:#1557b0}
+.btn-danger{background:#e53935;color:#fff}
+.btn-danger:hover{background:#c62828}
+.modal.warn-modal h3{background:#ffebee;color:#c62828;border-color:#ef9a9a}
+.modal.warn-modal .note-text{background:#fff8e1;border-left:4px solid #ff9800;padding:10px 12px;margin:10px 0;border-radius:0 8px 8px 0;color:#e65100;font-size:13px}
+.modal.warn-modal .note-text strong{color:#c62828}
+.fav-item{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #f5f5f5;gap:8px}
+.fav-item .fav-info{flex:1;min-width:0}
+.fav-item .fav-name{font-size:13px;font-weight:500}
+.fav-item .fav-count{font-size:12px;color:#999}
+.fav-item .fav-actions{display:flex;gap:6px}
+.fav-item .fav-actions button{padding:4px 8px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;font-size:11px}
+.fav-item .fav-actions button:hover{background:#f0f0f0}
+.fav-item .fav-actions .del-fav{color:#e53935;border-color:#e53935}
+.pkg-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:13px;align-items:center}
+.pkg-item .pkg-note{color:#e65100;font-size:11px;margin-top:2px}
+.pkg-total{margin-top:12px;text-align:right;font-size:16px;font-weight:700;color:#e53935;padding-top:12px;border-top:2px solid #e53935}
+.empty-state{text-align:center;padding:40px 20px;color:#999}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.cart-toggle-m{display:none}
+@media(max-width:768px){
+  .items-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .cart-sidebar{display:none;position:fixed;bottom:0;left:0;right:0;height:60vh;width:100%;border-left:none;border-top:1px solid #ddd;z-index:150;transform:translateY(100%);transition:transform .3s}
+  .cart-sidebar.mobile-show{transform:translateY(0);display:block}
+  .cart-toggle-m{display:flex;position:fixed;bottom:0;left:0;right:0;background:#1a73e8;color:#fff;padding:12px 20px;justify-content:space-between;align-items:center;z-index:140;font-size:14px;cursor:pointer;border:none}
+  .content-area{padding-bottom:80px}
+  .filter-bar{padding:8px 12px;top:52px}
+}
+.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.context-menu{position:fixed;background:#fff;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:250;padding:4px 0;min-width:120px}
+.context-menu div{padding:8px 16px;font-size:13px;cursor:pointer}
+.context-menu div:hover{background:#f5f5f5}
+.pkg-btn{background:linear-gradient(135deg,#ff9800,#f57c00)!important;color:#fff!important}
+.wb-btn{background:linear-gradient(135deg,#9c27b0,#7b1fa2)!important;color:#fff!important}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🔬 病理技术服务报价系统</h1>
+  <div class="header-sub">组织病理 · 染色 · 免疫荧光 · 分子检测 · 切片扫描</div>
+  <div class="search-wrap">
+    <input type="text" id="searchInput" placeholder="搜索项目名称、分类...">
+    <span class="search-icon">🔍</span>
+  </div>
+</div>
+<div class="filter-bar" id="filterBar"></div>
+<div class="action-bar">
+  <button class="action-btn wb-btn" onclick="showWbModal()">🧬 WB报价</button>
+  <button class="action-btn" onclick="showFavModal()">⭐ 收藏夹</button>
+  <button class="action-btn pkg-btn" onclick="showPkgModal()">📦 预设套餐</button>
+  <button class="action-btn" onclick="toggleCart()">🛒 购物车 <span class="cart-badge" id="cartBadge">0</span></button>
+</div>
+<div class="main-layout">
+  <div class="content-area" id="contentArea"></div>
+  <div class="cart-sidebar" id="cartSidebar">
+    <h2>🛒 购物车</h2>
+    <div class="cart-body" id="cartBody"></div>
+    <div class="cart-total" id="cartTotal" style="display:none">
+      <div class="total-row"><span class="label">合计：</span><span class="val" id="totalVal">¥0</span></div>
+      <div class="cart-actions">
+        <button class="btn-clear" onclick="clearCart()">清空</button>
+        <button class="btn-excel" onclick="exportExcel()">📊 Excel</button>
+        <button class="btn-word" onclick="exportWord()">📄 Word</button>
+        <button class="btn-txt" onclick="exportTxt()">📝 文字版</button>
+        <button class="btn-html" onclick="exportHtmlSystem()" style="background:linear-gradient(135deg,#4caf50,#388e3c);color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px">🌐 HTML系统</button>
+      </div>
+    </div>
+  </div>
+</div>
+<button class="cart-toggle-m" onclick="toggleCart()">🛒 购物车 (<span id="cartBadgeM">0</span>项) | ¥<span id="totalM">0</span></button>
+<div class="modal-overlay" id="warnModal"><div class="modal warn-modal"><h3 id="warnTitle"></h3><div class="modal-body"><div id="warnBody"></div></div><div class="modal-footer"><button class="btn-cancel" onclick="closeModal('warnModal')">取消</button><button class="btn-confirm" id="warnConfirmBtn">确认加购</button></div></div></div>
+<div class="modal-overlay" id="clearModal"><div class="modal"><h3>⚠️ 确认清空购物车</h3><div class="modal-body" id="clearBody"></div><div class="modal-footer"><button class="btn-cancel" onclick="closeModal('clearModal')">取消</button><button class="btn-danger" id="clearConfirmBtn">确认清空</button></div></div></div>
+<div class="modal-overlay" id="favModal"><div class="modal"><h3>⭐ 收藏夹管理</h3><div class="modal-body" id="favBody"></div><div class="modal-footer"><button class="btn-cancel" onclick="closeModal('favModal')">关闭</button><button class="btn-danger" onclick="clearAllFav()">清空全部</button></div></div></div>
+<div class="modal-overlay" id="favClearModal"><div class="modal"><h3>⚠️ 确认清空全部收藏</h3><div class="modal-body">将删除所有 <span id="favClearCount">0</span> 个收藏方案，此操作不可恢复。</div><div class="modal-footer"><button class="btn-cancel" onclick="closeModal('favClearModal')">取消</button><button class="btn-danger" onclick="doClearAllFav()">确认清空</button></div></div></div>
+<div class="modal-overlay" id="pkgModal"><div class="modal"><h3>📦 预设套餐</h3><div class="modal-body" id="pkgBody"></div><div class="modal-footer"><button class="btn-cancel" onclick="closeModal('pkgModal')">关闭</button></div></div></div>
+<div class="modal-overlay" id="pkgConfirmModal"><div class="modal warn-modal"><h3 id="pkgConfirmTitle"></h3><div class="modal-body" id="pkgConfirmBody"></div><div class="modal-footer"><button class="btn-cancel" onclick="closeModal('pkgConfirmModal')">取消</button><button class="btn-confirm" id="pkgConfirmBtn">确认加购</button></div></div></div>
+<div class="modal-overlay" id="wbModal">
+  <div class="modal" style="max-width:560px">
+    <h3>🧬 WB检测报价计算器</h3>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:12px">
+          <div style="flex:1">
+            <label style="font-size:13px;color:#666;display:block;margin-bottom:4px">样本数量</label>
+            <input type="number" id="wbSampleCount" value="15" min="1" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px">
+          </div>
+          <div style="flex:1">
+            <label style="font-size:13px;color:#666;display:block;margin-bottom:4px">检测指标数量</label>
+            <input type="number" id="wbIndicatorCount" value="1" min="1" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px">
+          </div>
+        </div>
+        <div>
+          <label style="font-size:13px;color:#666;display:block;margin-bottom:4px">蛋白类型</label>
+          <select id="wbProteinType" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px">
+            <option value="normal">普通蛋白/磷酸化蛋白（188元/孔/样）</option>
+            <option value="special">核蛋白/膜蛋白/线粒体蛋白（248元/孔/样）</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:13px;color:#666;display:block;margin-bottom:4px">同膜方式</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="wbSameMembrane" checked onchange="toggleWbMembrane()">
+            <label for="wbSameMembrane" style="font-size:13px">内参和目的蛋白同膜（140元/张膜，每14个样本/张）</label>
+          </div>
+        </div>
+        <div id="wbMembraneInfo" style="background:#f5f5f5;border-radius:6px;padding:10px;font-size:12px;color:#666">
+          预计需要 <b id="wbMembraneCount">2</b> 张膜（<span id="wbWellsPerMembrane">8</span> 样本/张）
+        </div>
+        <div id="wbResult" style="display:none;margin-top:8px">
+          <div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px">
+            <div style="font-weight:600;color:#333;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #eee">报价结果</div>
+            <div id="wbResultContent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('wbModal')">关闭</button>
+      <button class="btn-confirm" onclick="calcWbQuote()">计算报价</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="renameModal"><div class="modal"><h3>重命名收藏</h3><div class="modal-body"><input type="text" id="renameInput" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px" /></div><div class="modal-footer"><button class="btn-cancel" onclick="closeModal('renameModal')">取消</button><button class="btn-confirm" id="renameConfirmBtn">确认</button></div></div></div>
+<div class="toast" id="toast"></div>
+<div class="context-menu" id="ctxMenu" style="display:none"></div>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script>
+const ITEMS=[
+{id:1,category:"组织样本基础处理",name:"石蜡包埋",unitPrice:15,unit:"样",note:"提供10%Formalin/4%PFA固定组织，需明确切面要求"},
+{id:2,category:"组织样本基础处理",name:"细胞爬片",unitPrice:110,unit:"片",note:"不单接"},
+{id:3,category:"组织样本基础处理",name:"石蜡包埋(特殊组织)",unitPrice:30,unit:"样",note:"脑、眼球、细胞团、类器官、材料、植物等特殊组织"},
+{id:4,category:"组织样本基础处理",name:"琼脂包埋",unitPrice:20,unit:"样",note:"提供10%Formalin/4%PFA固定组织，需明确切面要求"},
+{id:5,category:"组织样本基础处理",name:"肠瑞士卷包埋",unitPrice:35,unit:"样",note:""},
+{id:6,category:"组织样本基础处理",name:"石蜡切片",unitPrice:5,unit:"张",note:"提供蜡块，单纯切片每个蜡块2张起切，默认做防脱切片"},
+{id:7,category:"组织样本基础处理",name:"石蜡切片(特殊组织)",unitPrice:10,unit:"张",note:"提供蜡块，如骨关节、脑、材料等特殊样本，单纯切片2张起切"},
+{id:8,category:"组织样本基础处理",name:"组织脱钙",unitPrice:50,unit:"样",note:"骨组织，小鼠2-3周，大鼠4-6周"},
+{id:9,category:"组织样本基础处理",name:"OCT包埋",unitPrice:10,unit:"样",note:"需明确切面要求，区分固定组织或者新鲜组织；骨头样本，在包埋前需要脱钙"},
+{id:10,category:"组织样本基础处理",name:"冰冻切片",unitPrice:10,unit:"张",note:""},
+{id:11,category:"组织样本基础处理",name:"冰冻切片(特殊组织)",unitPrice:20,unit:"样",note:"特殊厚度，特殊位置要求"},
+{id:12,category:"组织芯片阵列制作",name:"组织取芯位置标记",unitPrice:20,unit:"点",note:"病理医生通过HE片(切片+HE染色正常计费)，根据要求分析并标记取芯位置"},
+{id:13,category:"组织芯片阵列制作",name:"组织取芯阵列制作",unitPrice:40,unit:"点",note:"取芯具体直径商定"},
+{id:14,category:"组织芯片阵列制作",name:"阵列蜡块切片",unitPrice:20,unit:"张",note:"要求30张起切，建议一次性将芯片蜡块连续切完"},
+{id:15,category:"组织切片染色\n（常规/特殊染色）",name:"HE染色(组织形态)",unitPrice:10,unit:"张",note:"提供蜡块/切片；染色报价不含切片、拍照或扫描，部分特殊染色6张起染，更多特殊染色详询销售工程师。"},
+{id:16,category:"组织切片染色\n（常规/特殊染色）",name:"马森(Masson)染色(胶原纤维)",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:17,category:"组织切片染色\n（常规/特殊染色）",name:"天狼星红染色(胶原纤维)",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:18,category:"组织切片染色\n（常规/特殊染色）",name:"PAS糖原染色(粘液和霉菌)",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:19,category:"组织切片染色\n（常规/特殊染色）",name:"AB-PAS爱先蓝-糖原染色(粘液)",unitPrice:40,unit:"张",note:"提供蜡块/切片"},
+{id:20,category:"组织切片染色\n（常规/特殊染色）",name:"油红O染色",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:21,category:"组织切片染色\n（常规/特殊染色）",name:"尼氏染色",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:22,category:"组织切片染色\n（常规/特殊染色）",name:"甲苯胺蓝",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:23,category:"组织切片染色\n（常规/特殊染色）",name:"番红固绿染色(植物或骨组织)",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:24,category:"组织切片染色\n（常规/特殊染色）",name:"阿利新蓝染色（AB染色）",unitPrice:25,unit:"张",note:"提供蜡块/切片"},
+{id:25,category:"组织切片染色\n（常规/特殊染色）",name:"EVG染色",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:26,category:"组织切片染色\n（常规/特殊染色）",name:"间苯二酚碱性品红染色",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:27,category:"组织切片染色\n（常规/特殊染色）",name:"movat五色法",unitPrice:60,unit:"张",note:"提供蜡块/切片"},
+{id:28,category:"组织切片染色\n（常规/特殊染色）",name:"Goldner三色法",unitPrice:40,unit:"张",note:"提供蜡块/切片"},
+{id:29,category:"组织切片染色\n（常规/特殊染色）",name:"Von kossa染色",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:30,category:"组织切片染色\n（常规/特殊染色）",name:"茜素红染色",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:31,category:"组织切片染色\n（常规/特殊染色）",name:"网状纤维染色",unitPrice:40,unit:"张",note:"提供蜡块/切片"},
+{id:32,category:"组织切片染色\n（常规/特殊染色）",name:"镀银染色",unitPrice:60,unit:"张",note:"提供蜡块/切片"},
+{id:33,category:"组织切片染色\n（常规/特殊染色）",name:"锇酸染色",unitPrice:230,unit:"张",note:"提供蜡块/切片"},
+{id:34,category:"组织切片染色\n（常规/特殊染色）",name:"TTC染色",unitPrice:60,unit:"张",note:"提供蜡块/切片"},
+{id:35,category:"组织切片染色\n（常规/特殊染色）",name:"刚果红染色",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:36,category:"组织切片染色\n（常规/特殊染色）",name:"Trap染色",unitPrice:60,unit:"张",note:"提供蜡块/切片"},
+{id:37,category:"组织切片染色\n（常规/特殊染色）",name:"PASM 六胺银染色",unitPrice:60,unit:"张",note:"提供蜡块/切片"},
+{id:38,category:"组织切片染色\n（常规/特殊染色）",name:"ALP 碱性磷酸酶染色",unitPrice:60,unit:"张",note:"提供蜡块/切片"},
+{id:39,category:"组织切片染色\n（常规/特殊染色）",name:"快速革兰氏染色",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:40,category:"组织切片染色\n（常规/特殊染色）",name:"亚甲基蓝染色",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:41,category:"组织切片染色\n（常规/特殊染色）",name:"碘-碘化钾染色",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:42,category:"组织切片染色\n（常规/特殊染色）",name:"肥大细胞染色",unitPrice:20,unit:"张",note:"提供蜡块/切片"},
+{id:43,category:"组织切片染色\n（常规/特殊染色）",name:"富尔根染色",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:44,category:"组织切片染色\n（常规/特殊染色）",name:"ATP染色",unitPrice:60,unit:"张",note:"提供蜡块/切片"},
+{id:45,category:"组织切片染色\n（常规/特殊染色）",name:"维多利亚兰染色",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:46,category:"组织切片染色\n（常规/特殊染色）",name:"β-半乳糖苷酶染色",unitPrice:40,unit:"张",note:"提供蜡块/切片"},
+{id:47,category:"组织切片染色\n（常规/特殊染色）",name:"黑色素染色",unitPrice:60,unit:"张",note:"提供蜡块/切片"},
+{id:48,category:"组织切片染色\n（常规/特殊染色）",name:"瑞士吉姆萨染色",unitPrice:20,unit:"张",note:"提供蜡块/切片"},
+{id:49,category:"组织切片染色\n（常规/特殊染色）",name:"间苯三酚染色（含拍照）",unitPrice:40,unit:"张",note:"提供蜡块/切片"},
+{id:50,category:"组织切片染色\n（常规/特殊染色）",name:"台盼蓝",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:51,category:"组织切片染色\n（常规/特殊染色）",name:"鬼笔环肽染色",unitPrice:80,unit:"张",note:"提供蜡块/切片"},
+{id:52,category:"组织切片染色\n（常规/特殊染色）",name:"抗酸染色",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:53,category:"组织切片染色\n（常规/特殊染色）",name:"WGA染色（FITC标记）",unitPrice:60,unit:"张",note:"提供蜡块/切片"},
+{id:54,category:"组织切片染色\n（常规/特殊染色）",name:"LFB染色",unitPrice:40,unit:"张",note:"提供蜡块/切片"},
+{id:55,category:"组织切片染色\n（常规/特殊染色）",name:"ROS染色",unitPrice:55,unit:"张",note:"提供蜡块/切片"},
+{id:56,category:"组织切片染色\n（常规/特殊染色）",name:"DAB加强法普鲁士蓝染色",unitPrice:30,unit:"张",note:"提供蜡块/切片"},
+{id:57,category:"组织切片染色\n（常规/特殊染色）",name:"DHE染色",unitPrice:55,unit:"张",note:"提供蜡块/切片"},
+{id:58,category:"组织切片染色\n（常规/特殊染色）",name:"GUS染色",unitPrice:60,unit:"张",note:"提供蜡块/切片"},
+{id:59,category:"多重免疫荧光",name:"抗体使用费",unitPrice:30,unit:"样/指标",note:"以上免疫染色需单独做预实验，四标以上荧光现询。\n这个里面是不含一抗的。每个指标抗体使用费用是30元 单标30*1 双标30*2 三标30*3"},
+{id:60,category:"多重免疫荧光",name:"免疫组化",unitPrice:35,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:61,category:"多重免疫荧光",name:"免疫组化+全景扫描",unitPrice:85,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:62,category:"多重免疫荧光",name:"免疫荧光(单标)",unitPrice:80,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:63,category:"多重免疫荧光",name:"免疫荧光(单标)+全景扫描",unitPrice:160,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:64,category:"多重免疫荧光",name:"免疫荧光(双标)",unitPrice:100,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:65,category:"多重免疫荧光",name:"免疫荧光(双标)+全景扫描",unitPrice:200,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:66,category:"多重免疫荧光",name:"免疫荧光(三标)",unitPrice:200,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:67,category:"多重免疫荧光",name:"免疫荧光(三标)+全景扫描",unitPrice:400,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:68,category:"多重免疫荧光",name:"免疫荧光(四标)",unitPrice:400,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:69,category:"多重免疫荧光",name:"免疫荧光(四标)+全景扫描",unitPrice:800,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:70,category:"多重免疫荧光",name:"免疫荧光(五标)",unitPrice:800,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:71,category:"多重免疫荧光",name:"免疫荧光(五标)+全景扫描",unitPrice:1600,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:72,category:"多重免疫荧光",name:"Tunel凋亡染色(DAB/荧光)",unitPrice:220,unit:"张",note:"提供切片/爬片"},
+{id:73,category:"多重免疫荧光",name:"Tunel凋亡染色(DAB/荧光)+全景扫描",unitPrice:300,unit:"张",note:"提供切片/爬片"},
+{id:74,category:"多重免疫荧光",name:"高尔基染色（含多层扫描）",unitPrice:600,unit:"项",note:"提供切片/爬片"},
+{id:75,category:"组织（芯片）多重荧光（含扫描）\n芯片客户自己提供",name:"免疫组化+全景扫描",unitPrice:400,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:76,category:"组织（芯片）多重荧光（含扫描）\n芯片客户自己提供",name:"免疫荧光（单标）+全景扫描",unitPrice:800,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:77,category:"组织（芯片）多重荧光（含扫描）\n芯片客户自己提供",name:"免疫荧光（双标）+全景扫描",unitPrice:1600,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:78,category:"组织（芯片）多重荧光（含扫描）\n芯片客户自己提供",name:"免疫荧光（三标）+全景扫描",unitPrice:2400,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:79,category:"组织（芯片）多重荧光（含扫描）\n芯片客户自己提供",name:"免疫荧光（四标）+全景扫描",unitPrice:5000,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:80,category:"组织（芯片）多重荧光（含扫描）\n芯片客户自己提供",name:"免疫荧光（五标）+全景扫描",unitPrice:7000,unit:"张",note:"提供切片/细胞爬片,一抗"},
+{id:81,category:"分子病理/超微病理检测",name:"原位杂交ISH/FISH（单标）",unitPrice:240,unit:"张",note:"可检测DNA/mRNA/LnCRNA/miRNA，客户提供探针、试剂盒；注:原位杂交建议客户选用地高辛标记探针，该探针转化为荧光标记，可用于荧光多标实验。"},
+{id:82,category:"分子病理/超微病理检测",name:"原位杂交探针定制",unitPrice:1500,unit:"项",note:"多种标记可以选，具体咨询"},
+{id:83,category:"切片扫描/拍照",name:"白光扫描(常规切片)",unitPrice:50,unit:"张",note:"10；500；具体根据组织大小商定"},
+{id:84,category:"切片扫描/拍照",name:"白光扫描(组织芯片)",unitPrice:200,unit:"张",note:"具体根据组织大小商定"},
+{id:85,category:"切片扫描/拍照",name:"荧光扫描(单标/双标/三标/四标/五标)",unitPrice:80,unit:"张",note:"具体根据组织大小商定"},
+{id:86,category:"切片扫描/拍照",name:"荧光扫描(组织芯片荧光单标/双标/三标/四标/五标)",unitPrice:1000,unit:"张",note:"具体根据组织点阵数量商定"},
+{id:87,category:"切片扫描/拍照",name:"did远红外光扫描",unitPrice:80,unit:"张",note:"具体根据样本以及需求来定"},
+{id:88,category:"切片扫描/拍照",name:"共聚焦(单标/双标/三标）",unitPrice:150,unit:"张",note:"具体根据样本以及需求来定"},
+{id:89,category:"切片扫描/拍照",name:"常规病理描述分析",unitPrice:40,unit:"张/视野",note:"提供代表性图片及病理常规分级;多视野分析及特殊要求详询"},
+{id:90,category:"切片扫描/拍照",name:"阳性细胞数量和平均光密度值分析",unitPrice:30,unit:"张/视野",note:"提供代表性图片及病理常规分级;多视野分析及特殊要求详询"},
+{id:91,category:"切片扫描/拍照",name:"免疫组化（阳性细胞数量）",unitPrice:30,unit:"张/指标",note:"全景扫描或者截图3张\n包含：阳性细胞比率、阳性细胞密度、平均光密度值、H-Score\n一次分析即可获取该指标阳性细胞数量相关参数的四个数值"},
+{id:92,category:"切片扫描/拍照",name:"免疫组化（阳性面积）",unitPrice:30,unit:"张/指标",note:"全景扫描或者截图3张\n包含：H-score、平均光密度值、阳性面积比、阳性面积密度。一次分析即可获取该指标阳性细胞数量相关参数的四个数值"},
+{id:93,category:"切片扫描/拍照",name:"免疫荧光（阳性细胞数量）",unitPrice:30,unit:"张/指标",note:"全景扫描或者截图3张\n按靶标数量，累计计费。包含：阳性细胞比率、阳性细胞密度、平均光密度值"},
+{id:94,category:"切片扫描/拍照",name:"免疫荧光（共定位计数）",unitPrice:60,unit:"张/组合",note:"全景扫描或者截图3张\n可分析每两个指标或多个指标的共定位阳性面积相关参数"},
+{id:95,category:"切片扫描/拍照",name:"免疫荧光（临近度分析）",unitPrice:60,unit:"张/组合",note:"全景扫描或者截图3张\n统计A细胞指定范围内，B细胞分布数量"},
+{id:96,category:"切片扫描/拍照",name:"免疫荧光（浸润分析）",unitPrice:120,unit:"张/指标",note:"全景扫描或者截图3张\n统计指定的免疫细胞在肿瘤边界内外一定范围内的分布数量"},
+{id:97,category:"切片扫描/拍照",name:"免疫荧光（细胞密度分析）",unitPrice:30,unit:"张/指标",note:"全景扫描或者截图3张\n从对象数据中测量特定半径内选定的细胞密度"},
+{id:98,category:"切片扫描/拍照",name:"阳性率分析（荧光分析）",unitPrice:25,unit:"张/视野",note:"提供代表性图片及病理常规分级;多视野分析及特殊要求详询"},
+{id:99,category:"切片扫描/拍照",name:"常规病理描述+病理评分",unitPrice:60,unit:"张/视野",note:"提供代表性图片重点病变描述及病理评分(需要提供评分标准)"},
+{id:100,category:"切片扫描/拍照",name:"病理评分",unitPrice:40,unit:"张/视野",note:"涉及HE+特染等共评，60-80元/例(需要提供评分标准)"},
+{id:101,category:"切片扫描/拍照",name:"病理医师+AI辅助(简易标注)",unitPrice:50,unit:"全切片",note:"适用于免疫组化、荧光、特殊染色，如IHC表达分析、纤维化面积、脂肪细胞大小、血管密度、肿瘤面积、转移灶数量/面积、坏死/栓塞及目的组织分类等"}
+];
+
+const CATEGORIES=[...new Set(ITEMS.map(i=>i.category))];
+let cart=JSON.parse(localStorage.getItem('pq_cart')||'{}');
+let favorites=JSON.parse(localStorage.getItem('pq_fav')||'[]');
+let activeCat='全部';
+let pendingItem=null;
+let pendingPkg=null;
+
+const PACKAGES=[
+{name:"常规病理套餐",items:[1,6,15],qty:{1:1,6:1,15:1},desc:"石蜡包埋+石蜡切片+HE染色 ¥30"},
+{name:"特殊组织病理套餐",items:[3,7,15],qty:{3:1,7:1,15:1},desc:"石蜡包埋(特殊组织)+石蜡切片(特殊组织)+HE染色 ¥50"},
+{name:"细胞爬片+免疫荧光(单标)",items:[2,62,85],qty:{2:1,62:1,85:1},desc:"细胞爬片+免疫荧光(单标)+荧光扫描 ¥270"},
+{name:"细胞爬片+免疫荧光(双标)",items:[2,64,85],qty:{2:1,64:1,85:1},desc:"细胞爬片+免疫荧光(双标)+荧光扫描 ¥290"},
+{name:"冰冻切片基础套餐",items:[9,10,15,83],qty:{9:1,10:1,15:1,83:1},desc:"OCT包埋+冰冻切片+HE染色+白光扫描 ¥80"},
+{name:"特殊冰冻切片套餐",items:[9,11,15,83],qty:{9:1,11:1,15:1,83:1},desc:"OCT包埋+冰冻切片(特殊组织)+HE染色+白光扫描 ¥90"},
+{name:"冰冻切片免疫荧光套餐",items:[9,10,62,85],qty:{9:1,10:1,62:1,85:1},desc:"OCT包埋+冰冻切片+免疫荧光(单标)+荧光扫描 ¥180"},
+{name:"免疫组化+全景扫描",items:[61],qty:{61:1},desc:"免疫组化+全景扫描 ¥85"}
+];
+
+function getItem(id){return ITEMS.find(i=>i.id===id)}
+function getCatLabel(c){return c.replace(/\n/g,' ')}
+
+function init(){
+  renderFilters();
+  renderItems();
+  renderCart();
+  document.getElementById('searchInput').addEventListener('input',renderItems);
+  document.addEventListener('click',()=>{document.getElementById('ctxMenu').style.display='none'});
+  document.addEventListener('contextmenu',e=>{
+    const card=e.target.closest('.item-card');
+    if(!card)return;
+    e.preventDefault();
+    const id=+card.dataset.id;
+    showCtxMenu(e,id);
+  });
+}
+
+function renderFilters(){
+  const bar=document.getElementById('filterBar');
+  bar.innerHTML='';
+  // 全部按钮
+  const allBtn=document.createElement('div');
+  allBtn.className='filter-chip '+(activeCat==='全部'?'active':'');
+  allBtn.textContent='全部 ('+ITEMS.length+')';
+  allBtn.onclick=function(){filterCat('全部');};
+  bar.appendChild(allBtn);
+  // 分类按钮
+  CATEGORIES.forEach(c=>{
+    const label=getCatLabel(c);
+    const count=ITEMS.filter(i=>i.category===c).length;
+    const chip=document.createElement('div');
+    chip.className='filter-chip '+(activeCat===c?'active':'');
+    chip.textContent=label+' ('+count+')';
+    chip.onclick=function(){filterCat(c);};
+    bar.appendChild(chip);
+  });
+}
+
+function filterCat(c){activeCat=c;renderFilters();renderItems()}
+
+function renderItems(){
+  const q=document.getElementById('searchInput').value.trim().toLowerCase();
+  const area=document.getElementById('contentArea');
+  let filtered=ITEMS.filter(i=>{
+    const matchCat=activeCat==='全部'||i.category===activeCat;
+    const matchQ=!q||i.name.toLowerCase().includes(q)||i.category.toLowerCase().includes(q);
+    return matchCat&&matchQ;
+  });
+  if(!filtered.length){
+    area.innerHTML='<div class="empty-state"><div class="icon">🔍</div><div>未找到匹配的项目</div></div>';
+    return;
+  }
+  area.innerHTML=`<div class="items-grid">${filtered.map(i=>{
+    const inCart=cart[i.id]||0;
+    const label=getCatLabel(i.category);
+    const esc=s=>String(s).replace(/[\\'"]{1}/g,c=>({'\\':'\\\\',"'":"\\'",'"':'\\"'}[c]));
+return`<div class="item-card" data-id="${i.id}" onclick="addToCart(${i.id})" oncontextmenu="showCtxMenu(event,${i.id},\'${esc(i.name)}\')">
+      ${i.note?'<div class="warn">⚠</div>':''}
+      <div class="cat-tag">${label}</div>
+      <div class="name">${i.name}</div>
+      <div class="price">¥${i.unitPrice}<span class="unit"> /${i.unit}</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+        ${inCart?`<div class="item-count">已加购 <b>${inCart}</b> ${i.unit}</div>`:'<span></span>'}
+        <button class="fav-star${isFav(i.id)?' active':''}" onclick="event.stopPropagation();addToFav(${i.id})" title="收藏">${isFav(i.id)?'★':'☆'}</button>
+      </div>
+    </div>`}).join('')}</div>`;
+}
+
+function addToCart(id){
+  const item=getItem(id);
+  if(!item)return;
+  if(item.note){
+    pendingItem=item;
+    document.getElementById('warnTitle').textContent='⚠️ 注意事项';
+    document.getElementById('warnBody').innerHTML=`<p style="font-weight:500;margin-bottom:8px">${item.name} <span style="color:#e53935">¥${item.unitPrice}/${item.unit}</span></p><div class="note-text"><strong>⚠ 注意：</strong>${item.note.replace(/\n/g,'<br>')}</div>`;
+    document.getElementById('warnConfirmBtn').onclick=()=>{cart[item.id]=(cart[item.id]||0)+1;saveCart();renderItems();renderCart();closeModal('warnModal');toast('已加购: '+item.name)};
+    showModal('warnModal');
+  } else {
+    cart[id]=(cart[id]||0)+1;
+    saveCart();renderItems();renderCart();
+    toast('已加购: '+item.name);
+  }
+}
+
+function changeQty(id,delta){
+  if(!cart[id])return;
+  cart[id]+=delta;
+  if(cart[id]<=0)delete cart[id];
+  saveCart();renderItems();renderCart();
+}
+
+function removeFromCart(id){
+  delete cart[id];saveCart();renderItems();renderCart();
+}
+
+function clearCart(){
+  const ids=Object.keys(cart);
+  if(!ids.length)return;
+  let total=0;
+  let count=0;
+  ids.forEach(id=>{const item=getItem(+id);if(item){total+=item.unitPrice*(cart[id]||0);count+=cart[id]||0}});
+  document.getElementById('clearBody').innerHTML=`购物车共 <b>${count}</b> 项，合计 <b style="color:#e53935">¥${total.toFixed(2)}</b>，确认清空？`;
+  document.getElementById('clearConfirmBtn').onclick=()=>{cart={};saveCart();renderItems();renderCart();closeModal('clearModal');toast('购物车已清空')};
+  showModal('clearModal');
+}
+
+function saveCart(){localStorage.setItem('pq_cart',JSON.stringify(cart))}
+
+function getTotal(){let t=0;Object.entries(cart).forEach(([id,qty])=>{const item=getItem(+id);if(item)t+=item.unitPrice*qty});return t}
+
+function renderCart(){
+  const body=document.getElementById('cartBody');
+  const totalDiv=document.getElementById('cartTotal');
+  const ids=Object.keys(cart).map(Number);
+  if(!ids.length){
+    body.innerHTML='<div class="empty-state"><div class="icon">🛒</div><div>购物车为空</div></div>';
+    totalDiv.style.display='none';
+  } else {
+    body.innerHTML=ids.map(id=>{
+      const item=getItem(id);
+      const qty=cart[id];
+      return`<div class="cart-item"><div class="ci-info"><div class="ci-name">${item.name}</div><div class="ci-price">¥${item.unitPrice}/${item.unit} × ${qty} = ¥${(item.unitPrice*qty).toFixed(2)}</div></div><div class="ci-qty"><button onclick="event.stopPropagation();changeQty(${id},-1)">−</button><span>${qty}</span><button onclick="event.stopPropagation();changeQty(${id},1)">+</button></div><div class="ci-del" onclick="event.stopPropagation();removeFromCart(${id})">×</div></div>`
+    }).join('');
+    totalDiv.style.display='block';
+    document.getElementById('totalVal').textContent='¥'+getTotal().toFixed(2);
+  }
+  const total=ids.reduce((s,id)=>s+(cart[id]||0),0);
+  document.getElementById('cartBadge').textContent=total;
+  document.getElementById('cartBadgeM').textContent=total;
+  document.getElementById('totalM').textContent=getTotal().toFixed(2);
+}
+
+function toggleCart(){
+  const sb=document.getElementById('cartSidebar');
+  sb.classList.toggle('mobile-show');
+}
+
+// Favorites
+function isFav(id){return favorites.some(f=>f.items.hasOwnProperty(String(id)))}
+function addToFav(id){
+  const item=getItem(id);
+  if(!item)return;
+  const name=prompt('收藏方案名称:',item.name);
+  if(!name)return;
+  favorites.push({name,items:{[id]:(cart[id]||0)||1},ts:Date.now()});
+  saveFav();renderItems();toast('已收藏: '+name);
+}
+
+function saveFav(){localStorage.setItem('pq_fav',JSON.stringify(favorites))}
+function showCtxMenu(e,id){
+  const menu=document.getElementById('ctxMenu');
+  const favLabel=isFav(id)?'移除收藏':'⭐ 收藏';
+  const favAction=isFav(id)?`removeFavItem(${id})`:'addToFav('+id+')';
+  menu.innerHTML=`<div onclick="${favAction}">${favLabel}</div>`;
+  menu.style.display='block';
+  menu.style.left=e.clientX+'px';
+  menu.style.top=e.clientY+'px';
+}
+function removeFavItem(id){
+  id=String(id);
+  favorites=favorites.map(f=>{const newItems={...f.items};delete newItems[id];return{...f,items:newItems}}).filter(f=>Object.keys(f.items).length>0);
+  saveFav();renderItems();toast('已取消收藏');
+}
+
+function showFavModal(){
+  const body=document.getElementById('favBody');
+  if(!favorites.length){body.innerHTML='<div class="empty-state"><div class="icon">⭐</div><div>暂无收藏</div></div>';showModal('favModal');return}
+  body.innerHTML=favorites.map((f,idx)=>{
+    const ids=Object.keys(f.items);
+    const totalPrice=ids.reduce((s,id)=>{const item=getItem(+id);return s+(item?item.unitPrice*f.items[id]:0)},0);
+    const itemNames=ids.map(id=>{const it=getItem(+id);return it?it.name:''}).filter(Boolean).join(' + ');
+    const desc=ids.length<=3?itemNames:'共'+ids.length+'项 | ¥'+totalPrice.toFixed(2);
+    return`<div style="padding:12px 0;border-bottom:1px solid #f0f0f0"><div style="font-weight:600;margin-bottom:4px">⭐ ${f.name}</div><div style="font-size:12px;color:#666;margin-bottom:6px">${desc} <span style="color:#999;cursor:pointer;text-decoration:underline;margin-left:8px" onclick="renameFav(${idx})">改名</span> <span style="color:#999;cursor:pointer;text-decoration:underline" onclick="delFav(${idx})">删除</span></div><div style="font-size:12px;color:#999">${itemNames}</div><div style="text-align:right;margin-top:6px"><span style="color:#e53935;font-weight:700">¥${totalPrice.toFixed(2)}</span> <button onclick="loadFav(${idx})" style="margin-left:8px;padding:4px 12px;border-radius:6px;border:none;background:#ff9800;color:#fff;cursor:pointer;font-size:12px">选择</button></div></div>`
+  }).join('');
+  showModal('favModal');
+}
+
+function renameFav(idx){
+  closeModal('favModal');
+  document.getElementById('renameInput').value=favorites[idx].name;
+  document.getElementById('renameConfirmBtn').onclick=()=>{favorites[idx].name=document.getElementById('renameInput').value.trim()||favorites[idx].name;saveFav();renderItems();closeModal('renameModal');toast('已重命名');setTimeout(()=>showFavModal(),200)};
+  showModal('renameModal');
+}
+
+function delFav(idx){favorites.splice(idx,1);saveFav();renderItems();showFavModal();toast('已删除收藏')}
+
+function loadFav(idx){
+  const f=favorites[idx];
+  Object.entries(f.items).forEach(([id,qty])=>{const item=getItem(+id);if(item){
+    if(item.note){
+      cart[id]=(cart[id]||0)+qty;
+    }else{cart[id]=(cart[id]||0)+qty}
+  }});
+  saveCart();renderItems();renderCart();closeModal('favModal');toast('已从收藏加购: '+f.name);
+}
+
+function clearAllFav(){
+  document.getElementById('favClearCount').textContent=favorites.length;
+  showModal('favClearModal');
+}
+function doClearAllFav(){favorites=[];saveFav();renderItems();closeModal('favClearModal');closeModal('favModal');toast('已清空所有收藏')}
+
+// Packages
+function showPkgModal(){
+  const body=document.getElementById('pkgBody');
+  body.innerHTML=PACKAGES.map((pkg,idx)=>{
+    const total=pkg.items.reduce((s,id)=>{const item=getItem(id);return s+(item?item.unitPrice*(pkg.qty[id]||1):0)},0);
+    return`<div style="padding:12px 0;border-bottom:1px solid #f0f0f0"><div style="font-weight:600;margin-bottom:4px">📦 ${pkg.name}</div><div style="font-size:12px;color:#666;margin-bottom:6px">${pkg.desc}</div><div style="font-size:12px;color:#999">${pkg.items.map(id=>{const it=getItem(id);return it?it.name:''}).join(' + ')}</div><div style="text-align:right;margin-top:6px"><span style="color:#e53935;font-weight:700">¥${total.toFixed(2)}</span> <button onclick="confirmPkg(${idx})" style="margin-left:8px;padding:4px 12px;border-radius:6px;border:none;background:#ff9800;color:#fff;cursor:pointer;font-size:12px">选择</button></div></div>`
+  }).join('');
+  showModal('pkgModal');
+}
+
+function confirmPkg(idx){
+  const pkg=PACKAGES[idx];
+  pendingPkg=pkg;
+  closeModal('pkgModal');
+  let html=`<p style="font-weight:600;margin-bottom:12px">📦 ${pkg.name}</p>`;
+  let total=0;
+  pkg.items.forEach(id=>{
+    const item=getItem(id);
+    if(!item)return;
+    const qty=pkg.qty[id]||1;
+    const sub=item.unitPrice*qty;
+    total+=sub;
+    html+=`<div class="pkg-item"><div><div>${item.name}${qty>1?' ×'+qty:''}</div>${item.note?'<div class="pkg-note">⚠ '+item.note.replace(/\n/g,' ')+'</div>':''}</div><div>¥${sub.toFixed(2)}</div></div>`;
+  });
+  html+=`<div class="pkg-total">合计：¥${total.toFixed(2)}</div>`;
+  document.getElementById('pkgConfirmTitle').textContent='确认加购套餐';
+  document.getElementById('pkgConfirmBody').innerHTML=html;
+  document.getElementById('pkgConfirmBtn').onclick=()=>{
+    pkg.items.forEach(id=>{const qty=pkg.qty[id]||1;cart[id]=(cart[id]||0)+qty});
+    saveCart();renderItems();renderCart();closeModal('pkgConfirmModal');toast('已加购套餐: '+pkg.name)
+  };
+  showModal('pkgConfirmModal');
+}
+
+// Export Excel
+async function exportExcel(){
+  const ids=Object.keys(cart).map(Number);
+  if(!ids.length){toast('购物车为空');return}
+  const wb=new ExcelJS.Workbook();
+  const ws=wb.addWorksheet('报价单',{properties:{defaultColWidth:12}});
+  const dateStr=new Date().toLocaleDateString('zh-CN');
+  const titleRow=ws.getRow(1);
+  ws.mergeCells('A1:H1');
+  titleRow.getCell(1).value='优品生物 · 病理技术服务报价单';
+  titleRow.height=40;
+  titleRow.getCell(1).font={name:'微软雅黑',size:16,bold:true,color:{argb:'FF1A73E8'}};
+  titleRow.getCell(1).alignment={horizontal:'center',vertical:'middle'};
+  titleRow.eachCell(c=>{c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE8F0FE'}};c.border={bottom:{style:'medium',color:{argb:'FF1A73E8'}}}});
+
+  const dateRow=ws.getRow(2);
+  ws.mergeCells('A2:H2');
+  dateRow.getCell(1).value='报价日期：'+dateStr;
+  dateRow.height=24;
+  dateRow.getCell(1).font={name:'微软雅黑',size:10,color:{argb:'FF666666'}};
+  dateRow.getCell(1).alignment={horizontal:'right',vertical:'middle'};
+  dateRow.eachCell(c=>{c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF5F7FF'}}});
+
+  const headerRow=ws.getRow(4);
+  const headers=['序号','项目名称','分类','单位','单价(元)','数量','小计(元)','注意事项'];
+  const colWidths=[8,30,18,8,12,8,12,40];
+  headers.forEach((h,i)=>{
+    const cell=headerRow.getCell(i+1);
+    cell.value=h;
+    cell.font={name:'微软雅黑',size:11,bold:true,color:{argb:'FFFFFFFF'}};
+    cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1A73E8'}};
+    cell.alignment={horizontal:'center',vertical:'middle'};
+    cell.border={top:{style:'thin',color:{argb:'FFB0BEC5'}},bottom:{style:'thin',color:{argb:'FFB0BEC5'}},left:{style:'thin',color:{argb:'FFB0BEC5'}},right:{style:'thin',color:{argb:'FFB0BEC5'}}};
+    ws.getColumn(i+1).width=colWidths[i];
+  });
+  headerRow.height=28;
+
+  let total=0;
+  ids.forEach((id,idx)=>{
+    const item=getItem(id);
+    const qty=cart[id];
+    const sub=item.unitPrice*qty;
+    total+=sub;
+    const r=ws.getRow(5+idx);
+    const vals=[idx+1,item.name,getCatLabel(item.category),item.unit,item.unitPrice,qty,sub,item.note||''];
+    const isEven=idx%2===0;
+    vals.forEach((v,ci)=>{
+      const cell=r.getCell(ci+1);
+      cell.value=v;
+      cell.font={name:'微软雅黑',size:10,color:{argb:'FF333333'}};
+      cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:isEven?'FFF8F9FF':'FFFFFFFF'}};
+      cell.alignment={horizontal:ci===1||ci===7?'left':'center',vertical:'middle',wrapText:ci===7};
+      cell.border={top:{style:'hair',color:{argb:'FFE0E0E0'}},bottom:{style:'hair',color:{argb:'FFE0E0E0'}},left:{style:'thin',color:{argb:'FFB0BEC5'}},right:{style:'thin',color:{argb:'FFB0BEC5'}}};
+    });
+    if(item.note){
+      r.getCell(8).font={name:'微软雅黑',size:9,color:{argb:'FFE53935'}};
+    }
+    r.height=22;
+  });
+
+  const totalRowIdx=5+ids.length;
+  const totalRow=ws.getRow(totalRowIdx);
+  ws.mergeCells('A'+totalRowIdx+':F'+totalRowIdx);
+  totalRow.getCell(1).value='合  计';
+  totalRow.getCell(1).font={name:'微软雅黑',size:12,bold:true,color:{argb:'FFFFFFFF'}};
+  totalRow.getCell(1).alignment={horizontal:'right',vertical:'middle'};
+  totalRow.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1A73E8'}};
+  for(let ci=2;ci<=6;ci++){totalRow.getCell(ci).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1A73E8'}};totalRow.getCell(ci).border={top:{style:'thin',color:{argb:'FFB0BEC5'}},bottom:{style:'thin',color:{argb:'FFB0BEC5'}},left:{style:'thin',color:{argb:'FFB0BEC5'}},right:{style:'thin',color:{argb:'FFB0BEC5'}}}}
+  totalRow.getCell(7).value=total;
+  totalRow.getCell(7).font={name:'微软雅黑',size:12,bold:true,color:{argb:'FFFFFFFF'}};
+  totalRow.getCell(7).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1A73E8'}};
+  totalRow.getCell(7).alignment={horizontal:'center',vertical:'middle'};
+  totalRow.getCell(7).numFmt='¥#,##0.00';
+  totalRow.getCell(7).border={top:{style:'thin',color:{argb:'FFB0BEC5'}},bottom:{style:'thin',color:{argb:'FFB0BEC5'}},left:{style:'thin',color:{argb:'FFB0BEC5'}},right:{style:'thin',color:{argb:'FFB0BEC5'}}};
+  totalRow.getCell(8).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1A73E8'}};
+  totalRow.getCell(8).border={top:{style:'thin',color:{argb:'FFB0BEC5'}},bottom:{style:'thin',color:{argb:'FFB0BEC5'}},left:{style:'thin',color:{argb:'FFB0BEC5'}},right:{style:'thin',color:{argb:'FFB0BEC5'}}};
+  totalRow.height=30;
+
+  const footIdx=totalRowIdx+2;
+  const footRow=ws.getRow(footIdx);
+  ws.mergeCells('A'+footIdx+':H'+footIdx);
+  footRow.getCell(1).value='本报价由优品生物病理技术服务系统生成 | '+dateStr;
+  footRow.getCell(1).font={name:'微软雅黑',size:8,color:{argb:'FF999999'}};
+  footRow.getCell(1).alignment={horizontal:'center'};
+
+  ws.views=[{state:'frozen',ySplit:4,xSplit:0,topLeftCell:'A5'}];
+
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='优品生物_报价单_'+dateStr.replace(/\//g,'-')+'.xlsx';
+  a.click();URL.revokeObjectURL(url);
+  toast('Excel报价单已导出');
+}
+
+// Export Word (detailed)
+function exportWord(){
+  const ids=Object.keys(cart).map(Number);
+  if(!ids.length){toast('购物车为空');return}
+  let html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><style>table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:6px 8px;font-size:12px}th{background:#4472C4;color:#fff;text-align:center}td{text-align:center}td:nth-child(2){text-align:left}td:last-child{text-align:left;background:#FFFDE7;border-left:3px solid #FF9800}.total-row td{background:#4472C4;color:#fff;font-weight:bold}.title-row{text-align:center;font-size:16px;font-weight:bold;padding:10px}</style></head><body>`;
+  html+=`<p class="title-row">病理技术服务报价单</p><p style="text-align:right;font-size:12px">日期：${new Date().toLocaleDateString('zh-CN')}</p><table><tr><th>序号</th><th>项目名称</th><th>分类</th><th>单位</th><th>单价(元)</th><th>数量</th><th>小计(元)</th><th>注意事项</th></tr>`;
+  let total=0;
+  ids.forEach((id,idx)=>{
+    const item=getItem(id);
+    const qty=cart[id];
+    const sub=item.unitPrice*qty;
+    total+=sub;
+    html+=`<tr><td>${idx+1}</td><td>${item.name}</td><td>${getCatLabel(item.category)}</td><td>${item.unit}</td><td>${item.unitPrice}</td><td>${qty}</td><td>${sub.toFixed(2)}</td><td>${item.note||'-'}</td></tr>`;
+  });
+  html+=`<tr class="total-row"><td colspan="6" style="text-align:right">合计</td><td>${total.toFixed(2)}</td><td></td></tr></table></body></html>`;
+  downloadDoc(html,'病理报价单_详细版');
+}
+
+// Export Word (simple text)
+function exportTxt(){
+  const ids=Object.keys(cart).map(Number);
+  if(!ids.length){toast('购物车为空');return}
+  let lines=[];
+  let total=0;
+  ids.forEach((id,idx)=>{
+    const item=getItem(id);
+    const qty=cart[id];
+    const sub=item.unitPrice*qty;
+    total+=sub;
+    lines.push(`${idx+1}.${item.name}: ${qty}${item.unit||'样'}x${item.unitPrice}元=${sub}元`);
+  });
+  lines.push(`合计(${ids.map(id=>{const item=getItem(id);const qty=cart[id];return item.unitPrice*qty}).join('+')})=${total}元`);
+  const text='病理技术服务报价单\n'+new Date().toLocaleDateString('zh-CN')+'\n\n'+lines.join('\n');
+  const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='报价单_文字版_'+new Date().toLocaleDateString('zh-CN').replace(/\//g,'-')+'.txt';
+  a.click();URL.revokeObjectURL(url);
+  toast('文字报价已导出');
+}
+
+function exportHtmlSystem(){
+  const ids=Object.keys(cart).map(Number);
+  if(!ids.length){toast('购物车为空');return}
+  const date=new Date().toLocaleDateString('zh-CN');
+  let total=0;
+  const items=ids.map((id,idx)=>{
+    const item=getItem(id);
+    const qty=cart[id];
+    const sub=item.unitPrice*qty;
+    total+=sub;
+    return {idx:idx+1,name:item.name,qty,unit:item.unit||'样',price:item.unitPrice,subtotal:sub,note:item.note||''};
+  });
+  
+  const html=`<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>病理技术服务报价单 - ${date}</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f5f5f5;margin:0;padding:20px}
+.container{max-width:800px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1);padding:24px}
+.header{text-align:center;border-bottom:2px solid #22846D;padding-bottom:16px;margin-bottom:20px}
+.header h1{color:#22846D;margin:0 0 8px;font-size:24px}
+.header .date{color:#666;font-size:14px}
+.table{width:100%;border-collapse:collapse;margin:16px 0}
+.table th{background:#22846D;color:#fff;padding:12px 8px;text-align:left;font-size:13px}
+.table td{padding:10px 8px;border-bottom:1px solid #eee;font-size:13px}
+.table tr:hover{background:#f9f9f9}
+.table .num{text-align:center;width:50px}
+.table .qty{text-align:center}
+.table .price{text-align:right}
+.total-row{background:#f5f5f5;font-weight:600}
+.total-row td{border-bottom:none;padding:16px 8px;font-size:16px}
+.note{font-size:12px;color:#666;margin-top:20px;padding:12px;background:#f9f9f9;border-radius:6px}
+.footer{text-align:center;margin-top:24px;color:#999;font-size:12px}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<h1>🔬 病理技术服务报价单</h1>
+<div class="date">生成日期：${date}</div>
+</div>
+<table class="table">
+<thead><tr><th class="num">序号</th><th>项目名称</th><th class="qty">数量</th><th class="price">单价</th><th class="price">小计</th></tr></thead>
+<tbody>
+${items.map(i=>`<tr><td class="num">${i.idx}</td><td>${i.name}${i.note?'<br><small style="color:#999">'+i.note+'</small>':''}</td><td class="qty">${i.qty}${i.unit}</td><td class="price">¥${i.price}</td><td class="price">¥${i.subtotal}</td></tr>`).join('\n')}
+<tr class="total-row"><td colspan="4" style="text-align:right">合计：</td><td class="price">¥${total}</td></tr>
+</tbody>
+</table>
+<div class="note">
+<strong>注意事项：</strong><br>
+1. 本报价单有效期为7天<br>
+2. 价格可能因样本特殊性调整，最终以合同为准<br>
+3. 如有疑问请联系优品生物客服
+</div>
+<div class="footer">
+优品生物 · 病理技术服务<br>
+生成于 ${new Date().toLocaleString('zh-CN')}
+</div>
+</div>
+</body>
+</html>`;
+  
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='报价系统_'+date.replace(/\//g,'-')+'.html';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('HTML报价系统已导出，可直接保存分享');
+}
+
+function downloadDoc(htmlContent,filename){
+  const blob=new Blob(['\ufeff'+htmlContent],{type:'application/msword'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename+'_'+new Date().toLocaleDateString('zh-CN').replace(/\//g,'-')+'.doc';
+  a.click();URL.revokeObjectURL(url);
+  toast('Word已导出');
+}
+
+function showModal(id){document.getElementById(id).classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+init();
+
+
+// WB Quote Calculator
+function showWbModal(){
+  document.getElementById('wbSampleCount').value=9;
+  document.getElementById('wbIndicatorCount').value=6;
+  document.getElementById('wbSameMembrane').checked=true;
+  document.getElementById('wbResult').style.display='none';
+  toggleWbMembrane();
+  showModal('wbModal');
+}
+
+function calcWbQuote(){
+  const proteinType=document.getElementById('wbProteinType').value;
+  const sampleCount=+document.getElementById('wbSampleCount').value||0;
+  const indicatorCount=+document.getElementById('wbIndicatorCount').value||0;
+  const sameMembrane=document.getElementById('wbSameMembrane').checked;
+  
+  if(!sampleCount||!indicatorCount){
+    toast('请填写样本数量和检测指标数量');
+    return;
+  }
+  
+  const PRICE_CONFIG={normal:188,special:248,membrane:140};
+  const proteinPrice=PRICE_CONFIG[proteinType];
+  const proteinLabel=proteinType==='normal'?'普通蛋白/磷酸化蛋白':'核蛋白/膜蛋白/线粒体蛋白';
+  
+  // 同膜：每14个样本1张膜
+  const membraneCount=sameMembrane?Math.ceil(sampleCount/14):0;
+  
+  // 方案一
+  const plan1Base=proteinPrice*sampleCount*indicatorCount;
+  const plan1Membrane=sameMembrane?PRICE_CONFIG.membrane*indicatorCount*membraneCount:0;
+  const plan1Total=plan1Base+plan1Membrane;
+  
+  // 方案二：188元/2孔，固定5组
+  const plan2Base=188*indicatorCount*5;
+  const plan2Membrane=sameMembrane?PRICE_CONFIG.membrane*indicatorCount*membraneCount:0;
+  const plan2Total=plan2Base+plan2Membrane;
+  
+  const wellsPerMembrane=membraneCount>0?Math.round(sampleCount/membraneCount):0;
+  
+  let html=`<div>
+    <div style="background:#f5f5f5;border-radius:6px;padding:10px;margin-bottom:12px;font-size:12px">
+      <div style="font-weight:600;color:#333;margin-bottom:6px">单价表</div>
+      <div style="color:#666;line-height:1.6">
+        <div>普通蛋白/磷酸化蛋白：188元/孔/样</div>
+        <div>核蛋白/膜蛋白/线粒体蛋白：248元/孔/样</div>
+        <div>内参和目的蛋白同膜：140元/张膜（每14个样本/张）</div>
+      </div>
+    </div>
+    <div style="margin-bottom:12px;font-size:12px">
+      <div style="font-weight:600;color:#333;margin-bottom:6px">当前配置</div>
+      <div style="color:#666;line-height:1.6">
+        <div>样本数量：${sampleCount} 个</div>
+        <div>检测指标：${indicatorCount} 个</div>
+        <div>蛋白类型：${proteinLabel}</div>
+        <div>同膜方式：${sameMembrane?'内参+目的蛋白同膜，'+membraneCount+'张膜（平均'+wellsPerMembrane+'样本/膜）':'不同膜'}</div>
+      </div>
+    </div>
+    <div style="border:2px solid #1a73e8;border-radius:8px;padding:10px;margin-bottom:10px">
+      <div style="font-weight:700;color:#1a73e8;font-size:14px;margin-bottom:8px">【方案一】包结果</div>
+      <div style="background:#f8fbff;border-radius:4px;padding:8px;margin-bottom:8px;font-size:12px">
+        <div style="color:#333;margin-bottom:4px">单价：${proteinPrice}元/孔/样</div>
+        <div style="color:#333;margin-bottom:4px">基础检测费用：${proteinPrice}元 × ${sampleCount}样本 × ${indicatorCount}指标 = ${plan1Base}元</div>
+        ${sameMembrane?`<div style="color:#333;margin-bottom:4px">同膜费用：${PRICE_CONFIG.membrane}元 × ${indicatorCount}指标 × ${membraneCount}张膜 = ${plan1Membrane}元</div>`:''}
+        <div style="color:#e53935;font-weight:700;margin-top:6px;padding-top:6px;border-top:1px dashed #ddd">合计：${plan1Base}元 + ${plan1Membrane}元 = ${plan1Total}元</div>
+      </div>
+      <div style="font-size:11px;color:#666;background:#fff3e0;border-radius:4px;padding:6px">
+        <b>服务包括：</b>按照符合趋势要求来做，包抗体和内参费用，周期10-15个工作日
+      </div>
+    </div>
+    <div style="border:2px solid #ff9800;border-radius:8px;padding:10px">
+      <div style="font-weight:700;color:#ff9800;font-size:14px;margin-bottom:8px">【方案二】只跑条带</div>
+      <div style="background:#fff8e1;border-radius:4px;padding:8px;margin-bottom:8px;font-size:12px">
+        <div style="color:#333;margin-bottom:4px">单价：188元/2个孔</div>
+        <div style="color:#333;margin-bottom:4px">基础检测费用：188元 × ${indicatorCount}指标 × 5组 = ${plan2Base}元</div>
+        ${sameMembrane?`<div style="color:#333;margin-bottom:4px">同膜费用：${PRICE_CONFIG.membrane}元 × ${indicatorCount}指标 × ${membraneCount}张膜 = ${plan2Membrane}元</div>`:''}
+        <div style="color:#e53935;font-weight:700;margin-top:6px;padding-top:6px;border-top:1px dashed #ddd">合计：${plan2Base}元 + ${plan2Membrane}元 = ${plan2Total}元</div>
+      </div>
+      <div style="font-size:11px;color:#666;background:#f5f5f5;border-radius:4px;padding:6px">
+        <b>服务包括：</b>以跑出条带交付，不调整优化结果，周期10-15工作日
+      </div>
+    </div>
+  </div>`;
+  
+  document.getElementById('wbResultContent').innerHTML=html;
+  document.getElementById('wbResult').style.display='block';
+}
+
+function toggleWbMembrane(){
+  const sameMembrane=document.getElementById('wbSameMembrane').checked;
+  const sampleCount=+document.getElementById('wbSampleCount').value||9;
+  const membraneCount=sameMembrane?Math.ceil(sampleCount/14):0;
+  const wellsPerMembrane=membraneCount>0?Math.round(sampleCount/membraneCount):0;
+  
+  document.getElementById('wbMembraneInfo').style.display=sameMembrane?'block':'none';
+  document.getElementById('wbMembraneCount').textContent=membraneCount;
+  document.getElementById('wbWellsPerMembrane').textContent=wellsPerMembrane;
+}
+
+document.getElementById('wbSampleCount').addEventListener('input',toggleWbMembrane);
+document.getElementById('wbIndicatorCount').addEventListener('input',toggleWbMembrane);
+
+</script>
+</body>
+</html>
